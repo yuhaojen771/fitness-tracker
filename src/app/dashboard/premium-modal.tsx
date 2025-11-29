@@ -16,8 +16,11 @@ type PremiumModalProps = {
  */
 export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly");
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "ecpay">("ecpay"); // 預設使用綠界（台灣）
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [ecpayFormData, setEcpayFormData] = useState<Record<string, string> | null>(null);
+  const [ecpayPaymentUrl, setEcpayPaymentUrl] = useState<string | null>(null);
 
   // 取得當前用戶 ID
   useEffect(() => {
@@ -33,6 +36,75 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
 
   const handleUpgrade = () => {
     onUpgrade(selectedPlan);
+  };
+
+  // 處理綠界（ECPay）付款
+  const handleECPayPayment = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!userId) {
+      alert("無法取得用戶資訊，請重新登入");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/ecpay/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: selectedPlan,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        const errorMessage = data.error || `伺服器錯誤 (${response.status})`;
+        console.error("ECPay API error:", {
+          status: response.status,
+          error: data.error,
+          data: data
+        });
+        alert(`無法建立付款連結：${errorMessage}\n\n請確認已設定綠界環境變數。`);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data.paymentUrl && data.orderData) {
+        // 設定表單資料並自動提交
+        setEcpayPaymentUrl(data.paymentUrl);
+        setEcpayFormData(data.orderData);
+        setIsLoading(false);
+        
+        // 建立隱藏表單並自動提交
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.paymentUrl;
+        
+        Object.keys(data.orderData).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = data.orderData[key];
+          form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        console.error("ECPay API response missing data:", data);
+        alert(data.error || "無法建立付款連結，請稍後再試");
+        setIsLoading(false);
+      }
+    } catch (error: any) {
+      console.error("ECPay payment error:", error);
+      const errorMessage = error.message || "未知錯誤";
+      alert(`付款處理發生錯誤：${errorMessage}\n\n請檢查網路連線或稍後再試。`);
+      setIsLoading(false);
+    }
   };
 
   // 處理 PayPal 付款（動態生成包含用戶 ID 的連結）
@@ -258,6 +330,37 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             </div>
           </div>
 
+          {/* 付款方式選擇 */}
+          <div className="space-y-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-700">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
+              選擇付款方式：
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("ecpay")}
+                className={`flex-1 rounded-md border-2 px-3 py-2 text-xs font-medium transition-all ${
+                  paymentMethod === "ecpay"
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-300"
+                    : "border-slate-200 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }`}
+              >
+                💳 綠界金流（台灣）
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("paypal")}
+                className={`flex-1 rounded-md border-2 px-3 py-2 text-xs font-medium transition-all ${
+                  paymentMethod === "paypal"
+                    ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-300"
+                    : "border-slate-200 bg-white text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }`}
+              >
+                🌐 PayPal（國際）
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -268,7 +371,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             </button>
             <button
               type="button"
-              onClick={handlePayPalPayment}
+              onClick={paymentMethod === "ecpay" ? handleECPayPayment : handlePayPalPayment}
               disabled={isLoading}
               className="flex-1 rounded-md bg-emerald-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-60 dark:bg-emerald-500 dark:hover:bg-emerald-600 whitespace-nowrap"
             >
