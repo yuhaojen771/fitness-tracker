@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
       const detectedPlan = plan || (itemName.includes("月繳") ? "monthly" : "yearly");
       
       // 使用 service role client 繞過 RLS，避免無限遞迴問題
-      const supabase = createSupabaseServiceRoleClient();
+      // 將客戶端轉換為 any 類型以解決 TypeScript 類型推斷問題
+      const supabase = createSupabaseServiceRoleClient() as any;
       
       // 先查詢現有的訂閱到期日
       const { data: existingProfile } = await supabase
@@ -118,8 +119,6 @@ export async function POST(request: NextRequest) {
       }
       
       // 更新用戶的訂閱狀態
-      // 使用類型斷言來解決 TypeScript 類型推斷問題
-      // @ts-ignore - createClient 和 createServerClient 的類型系統不完全兼容
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -146,11 +145,11 @@ export async function POST(request: NextRequest) {
       
       if (userId) {
         // 使用 service role client 繞過 RLS，避免無限遞迴問題
-        const supabase = createSupabaseServiceRoleClient();
+        // 將客戶端轉換為 any 類型以解決 TypeScript 類型推斷問題
+        const supabase = createSupabaseServiceRoleClient() as any;
         
         // 取消訂閱：將 is_premium 設為 false，但保留 subscription_end_date
         // 這樣用戶可以繼續使用 Premium 功能直到到期日
-        // @ts-ignore - createClient 和 createServerClient 的類型系統不完全兼容
         await supabase
           .from("profiles")
           .update({
