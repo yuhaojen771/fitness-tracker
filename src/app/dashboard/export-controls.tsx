@@ -55,26 +55,16 @@ export function ExportControls({ records, isPremium, onPremiumRequired }: Export
       <button
         type="button"
         onClick={handleExportCSV}
-        disabled={!isPremium}
-        className={`rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium sm:px-4 sm:text-sm ${
-          isPremium
-            ? "bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-            : "cursor-not-allowed bg-slate-100 text-slate-400 opacity-60 dark:bg-slate-800 dark:text-slate-500"
-        }`}
-        title={!isPremium ? "此功能僅限 Premium 會員使用" : ""}
+        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 sm:px-4 sm:text-sm"
+        title={!isPremium ? "點擊以升級 Premium 會員" : ""}
       >
         📥 匯出 CSV
       </button>
       <button
         type="button"
         onClick={handleExportJSON}
-        disabled={!isPremium}
-        className={`rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium sm:px-4 sm:text-sm ${
-          isPremium
-            ? "bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-            : "cursor-not-allowed bg-slate-100 text-slate-400 opacity-60 dark:bg-slate-800 dark:text-slate-500"
-        }`}
-        title={!isPremium ? "此功能僅限 Premium 會員使用" : ""}
+        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 sm:px-4 sm:text-sm"
+        title={!isPremium ? "點擊以升級 Premium 會員" : ""}
       >
         📥 匯出 JSON
       </button>

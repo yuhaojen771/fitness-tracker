@@ -64,7 +64,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
           <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
             <li className="flex items-start gap-2">
               <span className="text-emerald-500">📊</span>
-              <span>深度體重趨勢分析與進階報告</span>
+              <span>深度趨勢分析：包含 90 天/年度長效圖表及飲食關鍵字關聯分析</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-500">💾</span>
