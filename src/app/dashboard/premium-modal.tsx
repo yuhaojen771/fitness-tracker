@@ -57,22 +57,33 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
         }),
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
       const data = await response.json();
+      
+      if (!response.ok) {
+        // 顯示 API 返回的具體錯誤訊息
+        const errorMessage = data.error || `伺服器錯誤 (${response.status})`;
+        console.error("PayPal API error:", {
+          status: response.status,
+          error: data.error,
+          data: data
+        });
+        alert(`無法建立付款連結：${errorMessage}\n\n請確認已設定 PayPal 環境變數。`);
+        setIsLoading(false);
+        return;
+      }
       
       if (data.url) {
         // 跳轉到 PayPal 付款頁面
         window.location.href = data.url;
       } else {
+        console.error("PayPal API response missing URL:", data);
         alert(data.error || "無法建立付款連結，請稍後再試");
         setIsLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("PayPal payment error:", error);
-      alert("付款處理發生錯誤，請稍後再試");
+      const errorMessage = error.message || "未知錯誤";
+      alert(`付款處理發生錯誤：${errorMessage}\n\n請檢查網路連線或稍後再試。`);
       setIsLoading(false);
     }
   };
