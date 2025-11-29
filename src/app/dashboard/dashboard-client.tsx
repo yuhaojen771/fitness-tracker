@@ -68,10 +68,23 @@ export function DashboardClient({
   const isPremium = isPremiumActive(profile);
   // 免費用戶僅顯示最近 7 天的記錄，但仍會在資料庫中保存全部記錄
   // 使用 useMemo 避免每次 render 都產生新陣列，導致 useEffect 無限循環
-  const visibleRecords = useMemo(
-    () => (isPremium ? records : records.slice(0, 7)),
-    [records, isPremium]
-  );
+  const visibleRecords = useMemo(() => {
+    if (isPremium) {
+      return records;
+    }
+    // 計算 7 天前的日期
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    // 過濾出最近 7 天內的記錄（包括今天）
+    return records.filter((record) => {
+      const recordDate = new Date(record.date);
+      recordDate.setHours(0, 0, 0, 0);
+      return recordDate >= sevenDaysAgo;
+    });
+  }, [records, isPremium]);
 
   const [state, formAction] = useFormState(saveDailyRecordAction, initialState);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
