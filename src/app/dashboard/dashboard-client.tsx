@@ -261,14 +261,86 @@ export function DashboardClient({
     window.location.reload();
   };
 
+  // 鍵盤快捷鍵處理
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果用戶正在輸入（input、textarea、select），則不觸發快捷鍵
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // 檢查是否按了 Ctrl/Cmd 鍵（用於組合快捷鍵）
+      const isModifierPressed = e.ctrlKey || e.metaKey;
+
+      // H 鍵：跳轉到歷史記錄
+      if (e.key === "h" || e.key === "H") {
+        if (!isModifierPressed) {
+          e.preventDefault();
+          const historySection = document.getElementById("history-records");
+          if (historySection) {
+            historySection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+      }
+
+      // S 鍵：打開訂閱狀態
+      if (e.key === "s" || e.key === "S") {
+        if (!isModifierPressed) {
+          e.preventDefault();
+          setIsSubscriptionManagementOpen(true);
+        }
+      }
+
+      // P 鍵：打開 Premium Modal（如果不是 Premium）
+      if ((e.key === "p" || e.key === "P") && !isPremium) {
+        if (!isModifierPressed) {
+          e.preventDefault();
+          setIsPremiumModalOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPremium]);
+
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* 訂閱管理按鈕 - 放在最頂部，方便用戶訪問 */}
-      <div className="flex justify-end">
+      {/* 歷史記錄和訂閱狀態按鈕 - 左右並排 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        {/* 歷史記錄快捷按鈕 */}
+        <a
+          href="#history-records"
+          className="inline-flex items-center justify-center gap-2 rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:border-slate-500 sm:px-4"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>歷史記錄</span>
+        </a>
+        {/* 訂閱管理按鈕 */}
         <button
           type="button"
           onClick={() => setIsSubscriptionManagementOpen(true)}
-          className="inline-flex items-center gap-2 rounded-md border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm hover:bg-emerald-100 hover:border-emerald-400 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+          className="inline-flex items-center justify-center gap-2 rounded-md border-2 border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 shadow-sm hover:bg-emerald-100 hover:border-emerald-400 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 sm:px-4"
         >
           <svg
             className="h-5 w-5"
@@ -451,7 +523,7 @@ export function DashboardClient({
       )}
 
       {/* 歷史記錄列表 - 移到前面方便手機用戶快速查看 */}
-      <div id="history-records" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+      <div id="history-records" className="w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold dark:text-slate-100 sm:text-lg">
             歷史記錄{!isPremium && "（最近 7 天）"}
@@ -487,9 +559,9 @@ export function DashboardClient({
                 {filteredRecords.map((record) => (
                   <div
                     key={record.id}
-                    className="flex flex-col gap-3 rounded-md border border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-start sm:justify-between sm:p-4"
+                    className="flex w-full min-w-0 flex-col gap-3 rounded-md border border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-start sm:justify-between sm:p-4"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(record.id)}
@@ -502,9 +574,9 @@ export function DashboardClient({
                           }
                           setSelectedIds(newSelected);
                         }}
-                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-700"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-slate-600 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-700"
                       />
-                      <div className="flex-1 space-y-1">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                           <span className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
                             {new Date(record.date).toLocaleDateString("zh-TW", {
@@ -514,20 +586,20 @@ export function DashboardClient({
                             })}
                           </span>
                           {record.weight && (
-                            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300 sm:text-sm">
+                            <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300 sm:text-sm">
                               {record.weight} kg
                             </span>
                           )}
                         </div>
                         {record.diet_notes && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                          <p className="break-words text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
                             {record.diet_notes}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:ml-4">
+                    <div className="flex shrink-0 items-center gap-2 sm:ml-4">
                       <button
                         type="button"
                         onClick={() => handleEdit(record)}
