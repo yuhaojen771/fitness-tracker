@@ -52,7 +52,9 @@ export async function saveDailyRecordAction(
   }
 
   // 使用 upsert 建立或更新記錄（根據 user_id + date 的唯一約束）
-  const { error } = await supabase.from("daily_records").upsert(
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const dailyRecordsTable = supabase.from("daily_records") as any;
+  const { error } = await dailyRecordsTable.upsert(
     {
       user_id: user.id,
       date,
@@ -155,16 +157,16 @@ export async function upgradeToPremiumAction(plan: "monthly" | "yearly" = "yearl
   const subscriptionEndDateStr = formatSubscriptionEndDate(subscriptionEndDate);
 
   // 更新 profiles 表的 is_premium 和 subscription_end_date 欄位
-  const { error } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        is_premium: true,
-        subscription_end_date: subscriptionEndDateStr
-      },
-      { onConflict: "id" }
-    );
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { error } = await profilesTable.upsert(
+    {
+      id: user.id,
+      is_premium: true,
+      subscription_end_date: subscriptionEndDateStr
+    },
+    { onConflict: "id" }
+  );
 
   if (error) {
     console.error("Upgrade premium error:", error);
@@ -286,18 +288,18 @@ export async function updateTargetAction(
     return { success: false, error: "起始體重必須是大於 0 的數字" };
   }
 
-  const { error } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        target_weight: targetWeight,
-        target_date: targetDate || null,
-        starting_weight: startingWeight,
-        starting_date: startingDate || null
-      },
-      { onConflict: "id" }
-    );
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { error } = await profilesTable.upsert(
+    {
+      id: user.id,
+      target_weight: targetWeight,
+      target_date: targetDate || null,
+      starting_weight: startingWeight,
+      starting_date: startingDate || null
+    },
+    { onConflict: "id" }
+  );
 
   if (error) {
     console.error("Update target error:", error);
