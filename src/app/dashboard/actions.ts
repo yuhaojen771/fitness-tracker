@@ -276,18 +276,11 @@ export async function updateTargetAction(
 
   const targetWeightStr = String(formData.get("target_weight") ?? "").trim();
   const targetDate = String(formData.get("target_date") ?? "").trim();
-  const startingWeightStr = String(formData.get("starting_weight") ?? "").trim();
-  const startingDate = String(formData.get("starting_date") ?? "").trim();
 
   const targetWeight = targetWeightStr ? parseFloat(targetWeightStr) : null;
-  const startingWeight = startingWeightStr ? parseFloat(startingWeightStr) : null;
 
   if (targetWeightStr && (isNaN(targetWeight!) || targetWeight! <= 0)) {
     return { success: false, error: "目標體重必須是大於 0 的數字" };
-  }
-
-  if (startingWeightStr && (isNaN(startingWeight!) || startingWeight! <= 0)) {
-    return { success: false, error: "起始體重必須是大於 0 的數字" };
   }
 
   // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
@@ -296,9 +289,8 @@ export async function updateTargetAction(
     {
       id: user.id,
       target_weight: targetWeight,
-      target_date: targetDate || null,
-      starting_weight: startingWeight,
-      starting_date: startingDate || null
+      target_date: targetDate || null
+      // 不再更新起始體重和起始日期，使用第一筆記錄自動計算
     },
     { onConflict: "id" }
   );

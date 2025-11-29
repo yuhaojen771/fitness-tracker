@@ -20,12 +20,13 @@ export function TargetTracker({ profile, records }: TargetTrackerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // 計算進度
+  // 計算進度 - 使用第一筆記錄作為起始體重
   const calculateProgress = () => {
-    if (!profile?.target_weight || !profile?.starting_weight) {
+    if (!profile?.target_weight) {
       return null;
     }
 
+    // 獲取當前體重（最新的記錄）
     const currentWeight = records
       .filter((r) => r.weight !== null)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.weight;
@@ -34,14 +35,23 @@ export function TargetTracker({ profile, records }: TargetTrackerProps) {
       return null;
     }
 
-    const totalChange = profile.target_weight - profile.starting_weight;
-    const currentChange = currentWeight - profile.starting_weight;
+    // 使用第一筆記錄的體重作為起始體重（如果沒有記錄，使用當前體重）
+    const sortedRecords = records
+      .filter((r) => r.weight !== null)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const startingWeight = sortedRecords.length > 0 
+      ? sortedRecords[0].weight! 
+      : currentWeight;
+
+    const totalChange = profile.target_weight - startingWeight;
+    const currentChange = currentWeight - startingWeight;
     const progress = totalChange !== 0 ? (currentChange / totalChange) * 100 : 0;
 
     return {
       currentWeight,
       targetWeight: profile.target_weight,
-      startingWeight: profile.starting_weight,
+      startingWeight,
       progress: Math.min(100, Math.max(0, progress)),
       remaining: profile.target_weight - currentWeight
     };
@@ -79,38 +89,14 @@ export function TargetTracker({ profile, records }: TargetTrackerProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 sm:text-sm">
-                起始體重 (kg)
-              </label>
-              <input
-                type="number"
-                name="starting_weight"
-                step="0.1"
-                min="0"
-                defaultValue={profile?.starting_weight?.toString() || ""}
-                placeholder="例如：70"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 sm:text-sm">
-                起始日期
-              </label>
-              <input
-                type="date"
-                name="starting_date"
-                defaultValue={profile?.starting_date || ""}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 sm:text-sm">
-                目標體重 (kg)
+                目標體重 (kg) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 name="target_weight"
                 step="0.1"
                 min="0"
+                required
                 defaultValue={profile?.target_weight?.toString() || ""}
                 placeholder="例如：65"
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
