@@ -47,18 +47,11 @@ export function WeightChart({ records, profile }: WeightChartProps) {
   
   const weightRange = maxWeight - minWeight || 1; // 避免除以零
   
-  // 計算日期範圍（包含目標日期）
+  // 計算日期範圍（僅基於實際數據，不包含目標日期）
+  // 這樣可以避免免費用戶的7天圖表被目標日期擴展到未來
   const dates = records.map((r) => new Date(r.date).getTime());
-  let minDate = Math.min(...dates);
-  let maxDate = Math.max(...dates);
-  
-  // 如果有目標日期，將其納入範圍計算
-  if (profile?.target_date) {
-    const targetDate = new Date(profile.target_date).getTime();
-    minDate = Math.min(minDate, targetDate);
-    maxDate = Math.max(maxDate, targetDate);
-  }
-  
+  const minDate = Math.min(...dates);
+  const maxDate = Math.max(...dates);
   const dateRange = maxDate - minDate || 1;
 
   // 計算 X 軸（日期）和 Y 軸（體重）的縮放比例
@@ -89,10 +82,16 @@ export function WeightChart({ records, profile }: WeightChartProps) {
     : null;
   
   // 計算目標日期線的 X 座標
-  const targetDateX = profile?.target_date
-    ? padding.left +
-      ((new Date(profile.target_date).getTime() - minDate) / dateRange) * chartWidth
-    : null;
+  // 只有在目標日期在數據範圍內時才顯示（避免未來日期超出圖表範圍）
+  let targetDateX: number | null = null;
+  if (profile?.target_date) {
+    const targetDate = new Date(profile.target_date).getTime();
+    // 只在目標日期在數據範圍內時計算位置（在圖表可見範圍內）
+    if (targetDate >= minDate && targetDate <= maxDate) {
+      targetDateX = padding.left + ((targetDate - minDate) / dateRange) * chartWidth;
+    }
+    // 如果目標日期在未來（超出數據範圍），不顯示目標日期線，但可以在圖表外側顯示標註
+  }
 
   // 生成折線路徑
   const pathData = points
@@ -109,14 +108,18 @@ export function WeightChart({ records, profile }: WeightChartProps) {
     };
   });
 
-  // 生成 X 軸刻度標籤（日期）- 基於日期範圍，包含目標日期
+  // 生成 X 軸刻度標籤（日期）- 僅基於實際數據範圍
+  // 顯示實際數據點的日期，確保免費用戶只能看到7天內的數據
+  const sortedDates = [...dates].sort((a, b) => a - b);
   const xTickCount = Math.min(records.length, 7);
   const xTicks = Array.from({ length: xTickCount }, (_, i) => {
-    const dateValue = minDate + (i / (xTickCount - 1 || 1)) * dateRange;
+    // 均勻分佈在數據範圍內
+    const dateIndex = Math.round((i / (xTickCount - 1 || 1)) * (sortedDates.length - 1));
+    const dateValue = sortedDates[dateIndex];
     const date = new Date(dateValue);
     return {
       date: date.toISOString().split("T")[0],
-      x: padding.left + (i / (xTickCount - 1 || 1)) * chartWidth
+      x: padding.left + ((dateValue - minDate) / dateRange) * chartWidth
     };
   });
 
@@ -196,7 +199,7 @@ export function WeightChart({ records, profile }: WeightChartProps) {
           </g>
         )}
 
-        {/* 目標日期線（垂直虛線） */}
+        {/* 目標日期線（垂直虛線）- 只在目標日期在數據範圍內時顯示 */}
         {targetDateX !== null && (
           <g>
             <line
@@ -230,6 +233,41 @@ export function WeightChart({ records, profile }: WeightChartProps) {
                     day: "numeric"
                   })
                 : ""}
+            </text>
+          </g>
+        )}
+        
+        {/* 如果目標日期在未來（超出數據範圍），在圖表右側顯示提示 */}
+        {profile?.target_date && !targetDateX && (
+          <g>
+            <text
+              x={width - padding.right + 5}
+              y={padding.top + 15}
+              textAnchor="start"
+              className="text-xs fill-amber-600 dark:fill-amber-400"
+              fontWeight="bold"
+            >
+              目標日期：
+            </text>
+            <text
+              x={width - padding.right + 5}
+              y={padding.top + 30}
+              textAnchor="start"
+              className="text-xs fill-amber-600 dark:fill-amber-400"
+            >
+              {new Date(profile.target_date).toLocaleDateString("zh-TW", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              })}
+            </text>
+            <text
+              x={width - padding.right + 5}
+              y={padding.top + 45}
+              textAnchor="start"
+              className="text-xs fill-slate-500 dark:fill-slate-400"
+            >
+              （未來日期，不在圖表範圍內）
             </text>
           </g>
         )}

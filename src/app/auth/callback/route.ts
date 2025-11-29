@@ -10,13 +10,29 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const errorParam = requestUrl.searchParams.get("error");
+  const errorDescription = requestUrl.searchParams.get("error_description");
 
   // 決定要導回哪個 origin：優先使用 NEXT_PUBLIC_SITE_URL，其次才是當前請求的 origin
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
 
+  // 記錄環境變數狀態（用於調試）
+  console.log("[OAuth Callback] Request URL:", requestUrl.href);
+  console.log("[OAuth Callback] Base URL:", baseUrl);
+  console.log("[OAuth Callback] NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL || "未設置");
+
+  // 檢查是否有 OAuth 錯誤參數
+  if (errorParam) {
+    console.error("[OAuth Callback] OAuth error:", errorParam, errorDescription);
+    return NextResponse.redirect(
+      new URL(`/auth/login?error=oauth_error&details=${encodeURIComponent(errorParam)}`, baseUrl)
+    );
+  }
+
   // 如果沒有 code，表示 OAuth 流程異常
   if (!code) {
+    console.error("[OAuth Callback] Missing code parameter");
     return NextResponse.redirect(
       new URL("/auth/login?error=missing_code", baseUrl)
     );
@@ -28,9 +44,9 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.session) {
-    console.error("OAuth callback error:", error);
+    console.error("[OAuth Callback] Session exchange error:", error);
     return NextResponse.redirect(
-      new URL("/auth/login?error=oauth_failed", baseUrl)
+      new URL(`/auth/login?error=oauth_failed&details=${encodeURIComponent(error?.message || "unknown")}`, baseUrl)
     );
   }
 

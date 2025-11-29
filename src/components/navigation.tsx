@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "./theme-toggle";
+import { FontSizeToggle } from "./font-size-toggle";
 import type { User } from "@supabase/supabase-js";
 
 /**
@@ -131,11 +132,13 @@ export function Navigation() {
               </>
             )}
           </div>
+          <FontSizeToggle />
           <ThemeToggle />
         </div>
 
         {/* 行動版漢堡選單按鈕 */}
         <div className="flex items-center gap-2 md:hidden">
+          <FontSizeToggle />
           <ThemeToggle />
           <button
             type="button"

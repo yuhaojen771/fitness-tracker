@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { FontSizeProvider } from "@/components/font-size-provider";
 import { Navigation } from "@/components/navigation";
 import { FeedbackButton } from "@/components/feedback-button";
 
@@ -45,14 +46,16 @@ export default function RootLayout({
     <html lang="zh-Hant" suppressHydrationWarning>
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
         <ThemeProvider>
-          <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800">
-            <Navigation />
-          </header>
-          <main className="mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-6 sm:px-4 sm:py-10">
-            {children}
-          </main>
-          {/* 用戶回饋/BUG 回報浮動按鈕 */}
-          <FeedbackButton />
+          <FontSizeProvider>
+            <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800">
+              <Navigation />
+            </header>
+            <main className="mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-6 sm:px-4 sm:py-10">
+              {children}
+            </main>
+            {/* 用戶回饋/BUG 回報浮動按鈕 */}
+            <FeedbackButton />
+          </FontSizeProvider>
         </ThemeProvider>
       </body>
     </html>
