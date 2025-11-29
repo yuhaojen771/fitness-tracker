@@ -124,8 +124,9 @@ export async function upgradeToPremiumAction(plan: "monthly" | "yearly" = "yearl
   }
 
   // 先查詢現有的 profile，檢查是否有未到期的 subscription_end_date
-  const { data: existingProfile } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { data: existingProfile } = await profilesTable
     .select("subscription_end_date")
     .eq("id", user.id)
     .single();
