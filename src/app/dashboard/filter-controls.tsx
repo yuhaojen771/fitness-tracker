@@ -42,15 +42,12 @@ export function FilterControls({
     if (!isPremium && value) {
       // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
         setStartDate("");
         setEndDate("");
-        // 立即打開升級畫面
-        setTimeout(() => {
-          if (onPremiumRequired) {
-            onPremiumRequired();
-          }
-        }, 100);
+        // 直接打開升級畫面，不顯示 alert
+        if (onPremiumRequired) {
+          onPremiumRequired();
+        }
         return;
       }
       // 如果已選擇結束日期，檢查範圍是否超過 7 天
@@ -59,14 +56,12 @@ export function FilterControls({
         const end = new Date(endDate);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
           setStartDate("");
           setEndDate("");
-          setTimeout(() => {
-            if (onPremiumRequired) {
-              onPremiumRequired();
-            }
-          }, 100);
+          // 直接打開升級畫面，不顯示 alert
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
           return;
         }
       }
@@ -78,20 +73,17 @@ export function FilterControls({
   const handleEndDateChange = (value: string) => {
     if (!isPremium && value) {
       if (value > todayStr) {
-        alert("無法選擇未來的日期。");
+        // 未來的日期只清除，不顯示 alert
         return;
       }
       // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
         setStartDate("");
         setEndDate("");
-        // 立即打開升級畫面
-        setTimeout(() => {
-          if (onPremiumRequired) {
-            onPremiumRequired();
-          }
-        }, 100);
+        // 直接打開升級畫面，不顯示 alert
+        if (onPremiumRequired) {
+          onPremiumRequired();
+        }
         return;
       }
       // 如果已選擇開始日期，檢查範圍是否超過 7 天
@@ -100,14 +92,12 @@ export function FilterControls({
         const end = new Date(value);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
           setStartDate("");
           setEndDate("");
-          setTimeout(() => {
-            if (onPremiumRequired) {
-              onPremiumRequired();
-            }
-          }, 100);
+          // 直接打開升級畫面，不顯示 alert
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
           return;
         }
       }
@@ -123,14 +113,11 @@ export function FilterControls({
       
       // 檢查開始日期是否在允許範圍內（不能早於 7 天前）
       if (startDate && startDate < sevenDaysAgoStr) {
-        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
         setStartDate("");
         setEndDate("");
-        // 立即打開升級畫面
+        // 直接打開升級畫面，不顯示 alert
         if (onPremiumRequired) {
-          setTimeout(() => {
-            onPremiumRequired();
-          }, 100);
+          onPremiumRequired();
         }
         return;
       }
@@ -138,19 +125,15 @@ export function FilterControls({
       // 檢查結束日期是否在允許範圍內
       if (endDate) {
         if (endDate > todayStr) {
-          alert("無法選擇未來的日期。");
           setEndDate(todayStr);
           return;
         }
         if (endDate < sevenDaysAgoStr) {
-          alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
           setStartDate("");
           setEndDate("");
-          // 立即打開升級畫面
+          // 直接打開升級畫面，不顯示 alert
           if (onPremiumRequired) {
-            setTimeout(() => {
-              onPremiumRequired();
-            }, 100);
+            onPremiumRequired();
           }
           return;
         }
@@ -162,14 +145,11 @@ export function FilterControls({
         const end = new Date(endDate);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
           setStartDate("");
           setEndDate("");
-          // 立即打開升級畫面
+          // 直接打開升級畫面，不顯示 alert
           if (onPremiumRequired) {
-            setTimeout(() => {
-              onPremiumRequired();
-            }, 100);
+            onPremiumRequired();
           }
           return;
         }
@@ -299,9 +279,22 @@ export function FilterControls({
               type="date"
               value={startDate}
               onChange={(e) => handleStartDateChange(e.target.value)}
+              onKeyDown={(e) => {
+                // 禁止手動鍵盤輸入（允許 Tab、Enter 等導航鍵）
+                if (e.key.length === 1 || e.key === "Backspace" || e.key === "Delete") {
+                  e.preventDefault();
+                }
+              }}
+              onInput={(e) => {
+                // 阻止手動輸入
+                const input = e.target as HTMLInputElement;
+                if (input.value !== startDate) {
+                  input.value = startDate || "";
+                }
+              }}
               min={minDate}
               max={maxDate}
-              className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 cursor-pointer"
             />
             {!isPremium && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -317,9 +310,22 @@ export function FilterControls({
               type="date"
               value={endDate}
               onChange={(e) => handleEndDateChange(e.target.value)}
+              onKeyDown={(e) => {
+                // 禁止手動鍵盤輸入（允許 Tab、Enter 等導航鍵）
+                if (e.key.length === 1 || e.key === "Backspace" || e.key === "Delete") {
+                  e.preventDefault();
+                }
+              }}
+              onInput={(e) => {
+                // 阻止手動輸入
+                const input = e.target as HTMLInputElement;
+                if (input.value !== endDate) {
+                  input.value = endDate || "";
+                }
+              }}
               min={minDate}
               max={maxDate}
-              className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+              className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 cursor-pointer"
             />
             {!isPremium && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
