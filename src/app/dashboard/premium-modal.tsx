@@ -378,6 +378,37 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
               {isLoading ? "處理中..." : `立即訂閱 ${selectedPlan === "monthly" ? "（月繳）" : "（年繳）"}`}
             </button>
           </div>
+
+          {/* 條款同意聲明 */}
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+            付款即表示您同意{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:underline dark:text-emerald-400"
+            >
+              服務條款
+            </a>
+            、{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:underline dark:text-emerald-400"
+            >
+              隱私權政策
+            </a>
+            {" "}與{" "}
+            <a
+              href="/refund"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 hover:underline dark:text-emerald-400"
+            >
+              退換貨政策
+            </a>
+          </p>
         </div>
       </div>
     </div>

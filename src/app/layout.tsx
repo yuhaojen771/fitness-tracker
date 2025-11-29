@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { FontSizeProvider } from "@/components/font-size-provider";
 import { Navigation } from "@/components/navigation";
+import { Footer } from "@/components/footer";
 import { FeedbackButton } from "@/components/feedback-button";
 
 export const metadata: Metadata = {
@@ -53,6 +54,7 @@ export default function RootLayout({
             <main className="mx-auto min-h-[calc(100vh-64px)] max-w-4xl px-4 py-6 sm:px-4 sm:py-10">
               {children}
             </main>
+            <Footer />
             {/* 用戶回饋/BUG 回報浮動按鈕 */}
             <FeedbackButton />
           </FontSizeProvider>

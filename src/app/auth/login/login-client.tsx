@@ -124,7 +124,24 @@ export function LoginClient({ initialError }: LoginClientProps) {
       )}
 
       <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-        點擊按鈕即表示你同意我們的服務條款與隱私政策
+        點擊按鈕即表示您同意我們的{" "}
+        <a
+          href="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-600 hover:underline dark:text-emerald-400"
+        >
+          服務條款
+        </a>
+        {" "}與{" "}
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-600 hover:underline dark:text-emerald-400"
+        >
+          隱私權政策
+        </a>
       </p>
     </div>
   );
