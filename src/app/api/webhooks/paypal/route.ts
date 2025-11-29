@@ -87,13 +87,17 @@ export async function POST(request: NextRequest) {
         .eq("id", userId)
         .single();
       
+      // 明確指定類型以避免 TypeScript 錯誤
+      type ProfileWithSubscription = { subscription_end_date: string | null } | null;
+      const profile = existingProfile as ProfileWithSubscription;
+      
       let baseDate: Date;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       // 如果現有到期日還沒到期，在該日期基礎上延長
-      if (existingProfile?.subscription_end_date) {
-        const existingEndDate = new Date(existingProfile.subscription_end_date);
+      if (profile?.subscription_end_date) {
+        const existingEndDate = new Date(profile.subscription_end_date);
         existingEndDate.setHours(0, 0, 0, 0);
         
         if (existingEndDate >= today) {
