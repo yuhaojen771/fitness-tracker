@@ -16,8 +16,9 @@ export default async function AdminPage() {
   }
 
   // 檢查用戶是否為管理員
-  const { data: profileData } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { data: profileData } = await profilesTable
     .select("*")
     .eq("id", user.id)
     .single();

@@ -23,8 +23,9 @@ async function checkAdminPermission(): Promise<{ isAdmin: boolean; userId: strin
     return { isAdmin: false, userId: null };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { data: profile } = await profilesTable
     .select("is_admin")
     .eq("id", user.id)
     .single();
@@ -160,8 +161,9 @@ export async function getAllUsersAction(): Promise<{
   const supabase = createSupabaseServerClient();
 
   // 獲取所有 profiles（RLS 政策會自動過濾，只有管理員可以看到所有）
-  const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { data: profiles, error: profilesError } = await profilesTable
     .select("id, is_premium, subscription_end_date, updated_at")
     .order("updated_at", { ascending: false });
 
