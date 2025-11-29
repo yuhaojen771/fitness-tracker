@@ -1,0 +1,91 @@
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DashboardClient } from "./dashboard-client";
+import { LogoutButton } from "./logout-button";
+import type { DailyRecordRow, ProfileRow } from "@/types/supabase";
+
+export default async function DashboardPage() {
+  const supabase = createSupabaseServerClient();
+
+  // 在 Server Component 中讀取目前登入的使用者
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  // 若尚未登入，直接導向登入頁
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  // 讀取用戶的 profile 資料（包含 is_premium 狀態）
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  const profile: ProfileRow | null = profileData || null;
+
+  // 如果沒有 profile，自動建立一個（預設 is_premium = false）
+  let finalProfile = profile;
+  if (!profile) {
+    const { data: newProfile, error: insertError } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        is_premium: false
+      })
+      .select()
+      .single();
+
+    if (newProfile && !insertError) {
+      finalProfile = newProfile;
+    } else if (insertError) {
+      // 如果插入失敗（可能是因為已經存在），嘗試重新讀取
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (existingProfile) {
+        finalProfile = existingProfile;
+      }
+    }
+  }
+
+  // 讀取用戶的所有每日記錄，按日期倒序排列
+  const { data: recordsData, error: recordsError } = await supabase
+    .from("daily_records")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("date", { ascending: false });
+
+  const records: DailyRecordRow[] = recordsData || [];
+
+  if (recordsError) {
+    console.error("Error fetching records:", recordsError);
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">儀表板</h1>
+          <p className="text-slate-600 text-sm dark:text-slate-400">
+            嗨，{user.email}，開始追蹤你的健康數據吧！
+          </p>
+        </div>
+        {/* Client-side 登出按鈕，確保立即刷新頁面 */}
+        <LogoutButton />
+      </div>
+
+      {/* Dashboard Client Component：包含表單、列表、圖表和 Premium 功能 */}
+      <DashboardClient
+        userEmail={user.email || ""}
+        profile={finalProfile}
+        records={records}
+      />
+    </section>
+  );
+}
+
