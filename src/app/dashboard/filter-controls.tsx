@@ -32,8 +32,7 @@ export function FilterControls({
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
   
-  // 非 Premium 用戶的最小日期（7 天前）
-  const minDate = isPremium ? undefined : sevenDaysAgoStr;
+  // 移除 min 限制，允許用戶點擊任何日期（但會在 onChange 中驗證）
   // 最大日期（今天）
   const maxDate = todayStr;
 
@@ -264,7 +263,7 @@ export function FilterControls({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜尋日期、體重或飲食記錄..."
+            placeholder="搜尋體重或飲食記錄..."
             className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
           />
         </div>
@@ -292,13 +291,12 @@ export function FilterControls({
                   input.value = startDate || "";
                 }
               }}
-              min={minDate}
               max={maxDate}
               className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 cursor-pointer"
             />
             {!isPremium && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                僅可選擇最近 7 天內
+                選擇 7 天前的日期需升級 Premium
               </p>
             )}
           </div>
@@ -323,13 +321,12 @@ export function FilterControls({
                   input.value = endDate || "";
                 }
               }}
-              min={minDate}
               max={maxDate}
               className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 cursor-pointer"
             />
             {!isPremium && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                僅可選擇最近 7 天內
+                選擇 7 天前的日期需升級 Premium
               </p>
             )}
           </div>
