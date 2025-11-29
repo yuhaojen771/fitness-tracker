@@ -29,8 +29,9 @@ export default async function DashboardPage() {
   // 如果沒有 profile，自動建立一個（預設 is_premium = false）
   let finalProfile = profile;
   if (!profile) {
-    const { data: newProfile, error: insertError } = await supabase
-      .from("profiles")
+    // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+    const profilesTable = supabase.from("profiles") as any;
+    const { data: newProfile, error: insertError } = await profilesTable
       .insert({
         id: user.id,
         is_premium: false
