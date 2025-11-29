@@ -32,7 +32,9 @@ export function WeightChart({ records, profile }: WeightChartProps) {
   // 圖表尺寸
   const width = 800;
   const height = 300;
-  const padding = { top: 20, right: 40, bottom: 40, left: 60 };
+  // 增加右側 padding 以容納目標文字，避免被截斷
+  // 為目標體重和目標日期文字預留足夠空間
+  const padding = { top: 20, right: 150, bottom: 40, left: 60 };
 
   // 計算體重範圍（包含目標體重）
   const weights = records.map((r) => r.weight!).filter((w) => w !== null);
@@ -130,6 +132,7 @@ export function WeightChart({ records, profile }: WeightChartProps) {
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         className="w-full"
+        style={{ overflow: 'visible' }}
       >
         {/* 網格線（Y 軸） */}
         {yTickValues.map((tick, i) => (
@@ -187,15 +190,28 @@ export function WeightChart({ records, profile }: WeightChartProps) {
               strokeDasharray="5,5"
               opacity={0.7}
             />
-            <text
-              x={width - padding.right + 5}
-              y={targetWeightY + 4}
-              textAnchor="start"
-              className="text-xs fill-emerald-600 dark:fill-emerald-400"
-              fontWeight="bold"
-            >
-              目標: {profile?.target_weight?.toFixed(1)} kg
-            </text>
+            {/* 目標體重標籤 - 放在圖表內側右邊，確保完整顯示 */}
+            <g>
+              {/* 文字背景（可選，用於提高可讀性） */}
+              <rect
+                x={width - padding.right - 5}
+                y={targetWeightY - 10}
+                width={padding.right - 10}
+                height={16}
+                fill="white"
+                fillOpacity={0.8}
+                className="dark:fill-slate-800 dark:fill-opacity-80"
+              />
+              <text
+                x={width - padding.right}
+                y={targetWeightY + 4}
+                textAnchor="end"
+                className="text-xs fill-emerald-600 dark:fill-emerald-400"
+                fontWeight="bold"
+              >
+                目標: {profile?.target_weight?.toFixed(1)} kg
+              </text>
+            </g>
           </g>
         )}
 
@@ -240,34 +256,36 @@ export function WeightChart({ records, profile }: WeightChartProps) {
         {/* 如果目標日期在未來（超出數據範圍），在圖表右側顯示提示 */}
         {profile?.target_date && !targetDateX && (
           <g>
+            {/* 文字背景，提高可讀性 */}
+            <rect
+              x={width - padding.right - 5}
+              y={padding.top}
+              width={padding.right - 10}
+              height={45}
+              fill="white"
+              fillOpacity={0.9}
+              className="dark:fill-slate-800 dark:fill-opacity-90"
+            />
             <text
-              x={width - padding.right + 5}
+              x={width - padding.right}
               y={padding.top + 15}
-              textAnchor="start"
+              textAnchor="end"
               className="text-xs fill-amber-600 dark:fill-amber-400"
               fontWeight="bold"
             >
               目標日期：
             </text>
             <text
-              x={width - padding.right + 5}
+              x={width - padding.right}
               y={padding.top + 30}
-              textAnchor="start"
+              textAnchor="end"
               className="text-xs fill-amber-600 dark:fill-amber-400"
             >
               {new Date(profile.target_date).toLocaleDateString("zh-TW", {
                 year: "numeric",
-                month: "long",
+                month: "short",
                 day: "numeric"
               })}
-            </text>
-            <text
-              x={width - padding.right + 5}
-              y={padding.top + 45}
-              textAnchor="start"
-              className="text-xs fill-slate-500 dark:fill-slate-400"
-            >
-              （未來日期，不在圖表範圍內）
             </text>
           </g>
         )}
