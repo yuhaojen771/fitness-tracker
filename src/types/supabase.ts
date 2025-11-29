@@ -18,6 +18,7 @@ export type DailyRecordRow = {
 export type ProfileRow = {
   id: string;
   is_premium: boolean;
+  is_admin: boolean;
   updated_at: string;
   subscription_end_date: string | null;
   target_weight: number | null;
@@ -46,6 +47,7 @@ export interface Database {
         Insert: {
           id: string;
           is_premium?: boolean;
+          is_admin?: boolean;
           updated_at?: string;
           subscription_end_date?: string | null;
           target_weight?: number | null;

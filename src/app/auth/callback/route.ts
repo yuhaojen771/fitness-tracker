@@ -54,14 +54,15 @@ export async function GET(request: Request) {
   if (data.user) {
     // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
     // 這是一個已知的 Supabase TypeScript 類型推斷限制
-    const profilesTable = supabase.from("profiles") as any;
-    const { error: profileError } = await profilesTable.upsert(
-      {
-        id: data.user.id,
-        is_premium: false
-      },
-      { onConflict: "id" }
-    );
+      const profilesTable = supabase.from("profiles") as any;
+      const { error: profileError } = await profilesTable.upsert(
+        {
+          id: data.user.id,
+          is_premium: false,
+          is_admin: false
+        },
+        { onConflict: "id" }
+      );
 
     if (profileError) {
       console.error("Profile creation error:", profileError);

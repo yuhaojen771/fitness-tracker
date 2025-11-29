@@ -33,7 +33,8 @@ export default async function DashboardPage() {
     const { data: newProfile, error: insertError } = await profilesTable
       .insert({
         id: user.id,
-        is_premium: false
+        is_premium: false,
+        is_admin: false
       })
       .select()
       .single();
