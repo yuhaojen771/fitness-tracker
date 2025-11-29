@@ -399,7 +399,13 @@ export function DashboardClient({
           <h2 className="text-base font-semibold dark:text-slate-100 sm:text-lg">
             歷史記錄{!isPremium && "（最近 7 天）"}
           </h2>
-          {visibleRecords.length > 0 && <ExportControls records={filteredRecords} />}
+          {visibleRecords.length > 0 && (
+            <ExportControls 
+              records={filteredRecords} 
+              isPremium={isPremium}
+              onPremiumRequired={() => setIsPremiumModalOpen(true)}
+            />
+          )}
         </div>
 
         {visibleRecords.length === 0 ? (

@@ -72,7 +72,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-500">🔒</span>
-              <span>完整歷史記錄與長期趨勢圖永久保存</span>
+              <span>完整歷史記錄與長期體重趨勢圖永久保存（免費用戶僅可查看最近 7 天記錄）</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-500">✓</span>
