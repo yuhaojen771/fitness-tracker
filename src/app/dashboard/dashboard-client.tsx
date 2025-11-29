@@ -263,6 +263,30 @@ export function DashboardClient({
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* 訂閱管理按鈕 - 放在最頂部，方便用戶訪問 */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setIsSubscriptionManagementOpen(true)}
+          className="inline-flex items-center gap-2 rounded-md border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm hover:bg-emerald-100 hover:border-emerald-400 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
+          </svg>
+          <span>{isPremium ? "管理訂閱" : "訂閱狀態"}</span>
+        </button>
+      </div>
+
       {/* 統計卡片 */}
       <StatsCards records={visibleRecords} />
 
@@ -530,16 +554,6 @@ export function DashboardClient({
 
       {/* Premium 按鈕和報告 */}
       <div className="space-y-4">
-        {/* 管理訂閱按鈕 - 所有用戶都可見 */}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setIsSubscriptionManagementOpen(true)}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            {isPremium ? "管理訂閱" : "訂閱狀態"}
-          </button>
-        </div>
         {!isPremium && (
           <div className="rounded-lg border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100 p-4 dark:border-emerald-700 dark:from-emerald-900/30 dark:to-emerald-800/30 sm:p-6">
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
