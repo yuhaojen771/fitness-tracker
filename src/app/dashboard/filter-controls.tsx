@@ -38,15 +38,23 @@ export function FilterControls({
 
   // 處理開始日期變更（非 Premium 用戶驗證）
   const handleStartDateChange = (value: string) => {
-    if (!isPremium && value) {
+    if (!value) {
+      setStartDate("");
+      return;
+    }
+
+    if (!isPremium) {
       // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        setStartDate("");
-        setEndDate("");
-        // 直接打開升級畫面，不顯示 alert
+        // 立即打開升級畫面（先執行，確保視窗能彈出）
         if (onPremiumRequired) {
           onPremiumRequired();
         }
+        // 然後清除日期選擇
+        setTimeout(() => {
+          setStartDate("");
+          setEndDate("");
+        }, 100);
         return;
       }
       // 如果已選擇結束日期，檢查範圍是否超過 7 天
@@ -55,34 +63,48 @@ export function FilterControls({
         const end = new Date(endDate);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          setStartDate("");
-          setEndDate("");
-          // 直接打開升級畫面，不顯示 alert
+          // 立即打開升級畫面（先執行，確保視窗能彈出）
           if (onPremiumRequired) {
             onPremiumRequired();
           }
+          // 然後清除日期選擇
+          setTimeout(() => {
+            setStartDate("");
+            setEndDate("");
+          }, 100);
           return;
         }
       }
     }
+    
+    // 正常設置日期
     setStartDate(value);
   };
 
   // 處理結束日期變更（非 Premium 用戶驗證）
   const handleEndDateChange = (value: string) => {
-    if (!isPremium && value) {
+    if (!value) {
+      setEndDate("");
+      return;
+    }
+
+    if (!isPremium) {
       if (value > todayStr) {
-        // 未來的日期只清除，不顯示 alert
+        // 未來的日期只清除，不設置
+        setEndDate("");
         return;
       }
       // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        setStartDate("");
-        setEndDate("");
-        // 直接打開升級畫面，不顯示 alert
+        // 立即打開升級畫面（先執行，確保視窗能彈出）
         if (onPremiumRequired) {
           onPremiumRequired();
         }
+        // 然後清除日期選擇
+        setTimeout(() => {
+          setStartDate("");
+          setEndDate("");
+        }, 100);
         return;
       }
       // 如果已選擇開始日期，檢查範圍是否超過 7 天
@@ -91,16 +113,21 @@ export function FilterControls({
         const end = new Date(value);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          setStartDate("");
-          setEndDate("");
-          // 直接打開升級畫面，不顯示 alert
+          // 立即打開升級畫面（先執行，確保視窗能彈出）
           if (onPremiumRequired) {
             onPremiumRequired();
           }
+          // 然後清除日期選擇
+          setTimeout(() => {
+            setStartDate("");
+            setEndDate("");
+          }, 100);
           return;
         }
       }
     }
+    
+    // 正常設置日期
     setEndDate(value);
   };
 
@@ -277,18 +304,14 @@ export function FilterControls({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => handleStartDateChange(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                handleStartDateChange(value);
+              }}
               onKeyDown={(e) => {
                 // 禁止手動鍵盤輸入（允許 Tab、Enter 等導航鍵）
                 if (e.key.length === 1 || e.key === "Backspace" || e.key === "Delete") {
                   e.preventDefault();
-                }
-              }}
-              onInput={(e) => {
-                // 阻止手動輸入
-                const input = e.target as HTMLInputElement;
-                if (input.value !== startDate) {
-                  input.value = startDate || "";
                 }
               }}
               max={maxDate}
@@ -307,18 +330,14 @@ export function FilterControls({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => handleEndDateChange(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                handleEndDateChange(value);
+              }}
               onKeyDown={(e) => {
                 // 禁止手動鍵盤輸入（允許 Tab、Enter 等導航鍵）
                 if (e.key.length === 1 || e.key === "Backspace" || e.key === "Delete") {
                   e.preventDefault();
-                }
-              }}
-              onInput={(e) => {
-                // 阻止手動輸入
-                const input = e.target as HTMLInputElement;
-                if (input.value !== endDate) {
-                  input.value = endDate || "";
                 }
               }}
               max={maxDate}
