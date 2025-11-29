@@ -119,13 +119,14 @@ export async function POST(request: NextRequest) {
       
       // 更新用戶的訂閱狀態
       // 使用類型斷言來解決 TypeScript 類型推斷問題
-      const { error: updateError } = await (supabase
+      // @ts-ignore - createClient 和 createServerClient 的類型系統不完全兼容
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({
           is_premium: true,
           subscription_end_date: subscriptionEndDate.toISOString().split("T")[0],
-        } as any)
-        .eq("id", userId) as any);
+        })
+        .eq("id", userId);
       
       if (updateError) {
         console.error("Error updating subscription:", updateError);
@@ -149,14 +150,14 @@ export async function POST(request: NextRequest) {
         
         // 取消訂閱：將 is_premium 設為 false，但保留 subscription_end_date
         // 這樣用戶可以繼續使用 Premium 功能直到到期日
-        // 使用類型斷言來解決 TypeScript 類型推斷問題
-        await (supabase
+        // @ts-ignore - createClient 和 createServerClient 的類型系統不完全兼容
+        await supabase
           .from("profiles")
           .update({
             is_premium: false,
             // subscription_end_date 保持不變，讓用戶可以使用到到期日
-          } as any)
-          .eq("id", userId) as any);
+          })
+          .eq("id", userId);
         
         console.log(`Subscription cancelled for user ${userId}`);
       }
