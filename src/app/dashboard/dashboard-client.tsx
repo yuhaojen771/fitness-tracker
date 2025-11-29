@@ -385,6 +385,110 @@ export function DashboardClient({
         </form>
       </div>
 
+      {/* 篩選與搜尋 */}
+      {visibleRecords.length > 0 && (
+        <FilterControls
+          records={visibleRecords}
+          onFilteredRecordsChange={setFilteredRecords}
+        />
+      )}
+
+      {/* 歷史記錄列表 - 移到前面方便手機用戶快速查看 */}
+      <div id="history-records" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold dark:text-slate-100 sm:text-lg">
+            歷史記錄{!isPremium && "（最近 7 天）"}
+          </h2>
+          {visibleRecords.length > 0 && <ExportControls records={filteredRecords} />}
+        </div>
+
+        {visibleRecords.length === 0 ? (
+          <p className="text-center text-slate-500 dark:text-slate-400">
+            尚無記錄，開始新增你的第一筆記錄吧！
+          </p>
+        ) : (
+          <>
+            <BatchActions
+              records={filteredRecords}
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
+              onRecordsChange={handleRecordsChange}
+            />
+
+            {filteredRecords.length === 0 ? (
+              <p className="text-center text-slate-500 dark:text-slate-400">
+                沒有符合條件的記錄
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {filteredRecords.map((record) => (
+                  <div
+                    key={record.id}
+                    className="flex flex-col gap-3 rounded-md border border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-start sm:justify-between sm:p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(record.id)}
+                        onChange={() => {
+                          const newSelected = new Set(selectedIds);
+                          if (newSelected.has(record.id)) {
+                            newSelected.delete(record.id);
+                          } else {
+                            newSelected.add(record.id);
+                          }
+                          setSelectedIds(newSelected);
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-700"
+                      />
+                      <div className="flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                            {new Date(record.date).toLocaleDateString("zh-TW", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric"
+                            })}
+                          </span>
+                          {record.weight && (
+                            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300 sm:text-sm">
+                              {record.weight} kg
+                            </span>
+                          )}
+                        </div>
+                        {record.diet_notes && (
+                          <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                            {record.diet_notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:ml-4">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(record)}
+                        className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 sm:flex-none"
+                      >
+                        編輯
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(record.id)}
+                        disabled={isPending}
+                        className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 sm:flex-none"
+                      >
+                        刪除
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Premium 按鈕和報告 */}
       <div className="space-y-4">
         {/* 管理訂閱按鈕 - 所有用戶都可見 */}
@@ -498,109 +602,6 @@ export function DashboardClient({
         </div>
       )}
 
-      {/* 篩選與搜尋 */}
-      {visibleRecords.length > 0 && (
-        <FilterControls
-          records={visibleRecords}
-          onFilteredRecordsChange={setFilteredRecords}
-        />
-      )}
-
-      {/* 歷史記錄列表 */}
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold dark:text-slate-100 sm:text-lg">
-            歷史記錄{!isPremium && "（最近 7 天）"}
-          </h2>
-          {visibleRecords.length > 0 && <ExportControls records={filteredRecords} />}
-        </div>
-
-        {visibleRecords.length === 0 ? (
-          <p className="text-center text-slate-500 dark:text-slate-400">
-            尚無記錄，開始新增你的第一筆記錄吧！
-          </p>
-        ) : (
-          <>
-            <BatchActions
-              records={filteredRecords}
-              selectedIds={selectedIds}
-              onSelectedIdsChange={setSelectedIds}
-              onRecordsChange={handleRecordsChange}
-            />
-
-            {filteredRecords.length === 0 ? (
-              <p className="text-center text-slate-500 dark:text-slate-400">
-                沒有符合條件的記錄
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {filteredRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    className="flex flex-col gap-3 rounded-md border border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-start sm:justify-between sm:p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(record.id)}
-                        onChange={() => {
-                          const newSelected = new Set(selectedIds);
-                          if (newSelected.has(record.id)) {
-                            newSelected.delete(record.id);
-                          } else {
-                            newSelected.add(record.id);
-                          }
-                          setSelectedIds(newSelected);
-                        }}
-                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-600 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-700"
-                      />
-                      <div className="flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                            {new Date(record.date).toLocaleDateString("zh-TW", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric"
-                            })}
-                          </span>
-                          {record.weight && (
-                            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300 sm:text-sm">
-                              {record.weight} kg
-                            </span>
-                          )}
-                        </div>
-                        {record.diet_notes && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                            {record.diet_notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:ml-4">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(record)}
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 sm:flex-none"
-                      >
-                        編輯
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(record.id)}
-                        disabled={isPending}
-                        className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 sm:flex-none"
-                      >
-                        刪除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
 
       {/* Premium Modal */}
       <PremiumModal
