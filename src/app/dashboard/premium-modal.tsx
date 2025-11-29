@@ -36,16 +36,9 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
   };
 
   // 處理 PayPal 付款（動態生成包含用戶 ID 的連結）
-  const handlePayPalPayment = async () => {
-    const hasTestUrl = !!process.env.NEXT_PUBLIC_PAYPAL_TEST_URL;
-    const hasLiveUrl = !!process.env.NEXT_PUBLIC_PAYPAL_LIVE_URL;
-    const hasOldMonthly = !!process.env.NEXT_PUBLIC_PAYPAL_MONTHLY_LINK;
-    const hasOldYearly = !!process.env.NEXT_PUBLIC_PAYPAL_YEARLY_LINK;
-    const hasAnyPaypalUrl = hasTestUrl || hasLiveUrl || hasOldMonthly || hasOldYearly;
-    
-    if (!hasAnyPaypalUrl) {
-      return; // 沒有設定 PayPal，顯示手動收款資訊
-    }
+  const handlePayPalPayment = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!userId) {
       alert("無法取得用戶資訊，請重新登入");
@@ -63,6 +56,10 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
           plan: selectedPlan,
         }),
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -258,17 +255,6 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             >
               稍後再說
             </button>
-            {/* 
-              【PayPal 金流整合】
-              PayPal 連結選擇邏輯：
-              - 如果設定了 NEXT_PUBLIC_PAYPAL_LIVE_URL，優先使用正式連結（可用於所有環境）
-              - 如果未設定正式連結：
-                * 開發環境（development）：使用 NEXT_PUBLIC_PAYPAL_TEST_URL（沙盒環境）
-                * 正式環境（production）：使用 NEXT_PUBLIC_PAYPAL_LIVE_URL（正式環境）
-              - 如果都未設定，回退到舊的月繳/年繳連結（向後兼容）
-              
-              付款完成後，用戶需手動更新 Supabase 中的 is_premium 欄位或透過 webhook 自動更新
-            */}
             <button
               type="button"
               onClick={handlePayPalPayment}
@@ -278,70 +264,6 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
               {isLoading ? "處理中..." : `立即訂閱 ${selectedPlan === "monthly" ? "（月繳）" : "（年繳）"}`}
             </button>
           </div>
-
-          {/* 如果沒有設定付款連結，顯示手動收款資訊 */}
-          {(() => {
-            const hasTestUrl = !!process.env.NEXT_PUBLIC_PAYPAL_TEST_URL;
-            const hasLiveUrl = !!process.env.NEXT_PUBLIC_PAYPAL_LIVE_URL;
-            const hasOldMonthly = !!process.env.NEXT_PUBLIC_PAYPAL_MONTHLY_LINK;
-            const hasOldYearly = !!process.env.NEXT_PUBLIC_PAYPAL_YEARLY_LINK;
-            const hasStripeKey = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-            const hasAnyPaymentUrl = hasTestUrl || hasLiveUrl || hasOldMonthly || hasOldYearly || hasStripeKey;
-            const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "客服信箱";
-            
-            if (!hasAnyPaymentUrl) {
-              const monthlyPrice = selectedPlan === "monthly" ? "NT$ 120" : "NT$ 1,200";
-              const yearlyPrice = selectedPlan === "yearly" ? "NT$ 1,200" : "NT$ 120";
-              const currentPrice = selectedPlan === "monthly" ? monthlyPrice : yearlyPrice;
-              
-              return (
-                <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
-                  <h3 className="mb-2 text-sm font-semibold text-amber-900 dark:text-amber-100">
-                    💳 付款方式
-                  </h3>
-                  <div className="mb-3 rounded-md bg-amber-100 p-2 dark:bg-amber-900/30">
-                    <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
-                      訂閱方案：{selectedPlan === "monthly" ? "月繳方案" : "年繳方案"}
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-amber-900 dark:text-amber-100">
-                      付款金額：{currentPrice}
-                    </p>
-                  </div>
-                  <p className="mb-2 text-xs font-medium text-amber-800 dark:text-amber-200">
-                    請透過以下方式完成付款：
-                  </p>
-                  <ul className="mb-3 ml-4 list-disc space-y-1 text-xs text-amber-800 dark:text-amber-200">
-                    <li>銀行轉帳：請聯繫客服取得帳號資訊</li>
-                    <li>ATM 轉帳：請聯繫客服取得帳號資訊</li>
-                    <li>其他付款方式：請聯繫客服</li>
-                  </ul>
-                  <div className="mb-2 rounded-md border border-amber-200 bg-white p-2 dark:border-amber-600 dark:bg-amber-900/10">
-                    <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
-                      📧 客服聯絡方式
-                    </p>
-                    <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
-                      Email：{supportEmail}
-                    </p>
-                    <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
-                      請在付款時備註您的 Email 或用戶 ID，以便我們快速為您啟用 Premium 功能。
-                    </p>
-                  </div>
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    ⚠️ 付款完成後，請提供付款證明（轉帳截圖或收據），我們會在 24 小時內為您啟用 Premium 功能。
-                  </p>
-                  <p className="mt-2 text-[10px] text-amber-500 dark:text-amber-500">
-                    💡 提示：可在環境變數中設定 <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/50">NEXT_PUBLIC_SUPPORT_EMAIL</code> 來自訂客服信箱
-                  </p>
-                </div>
-              );
-            }
-            
-            return (
-              <p className="text-xs text-slate-500 dark:text-slate-400 break-words leading-relaxed mt-2">
-                💳 付款完成後，您的 Premium 會員資格將自動啟用。如遇問題，請聯繫客服。
-              </p>
-            );
-          })()}
         </div>
       </div>
     </div>
