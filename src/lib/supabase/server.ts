@@ -7,11 +7,12 @@ import type { Database } from "@/types/supabase";
  * 會自動與 Next.js App Router 的 cookies API 整合，以確保使用者會話安全存放。
  */
 export function createSupabaseServerClient() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  // 支援兩種環境變數名稱（NEXT_PUBLIC_* 和直接名稱）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("找不到 Supabase 連線環境變數，請確認 .env.local 已設定。");
+    throw new Error("找不到 Supabase 連線環境變數，請確認 .env.local 或 Vercel 環境變數已設定。");
   }
 
   const cookieStore = cookies();
