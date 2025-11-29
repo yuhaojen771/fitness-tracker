@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import type { Database } from "@/types/supabase";
 
 /**
  * OAuth Callback 路由處理器
@@ -37,14 +36,16 @@ export async function GET(request: Request) {
 
   // 確保新用戶自動建立 profiles 記錄
   if (data.user) {
-    const profileData: Database["public"]["Tables"]["profiles"]["Insert"] = {
-      id: data.user.id,
-      is_premium: false
-    };
-    
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(profileData, { onConflict: "id" });
+    // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+    // 這是一個已知的 Supabase TypeScript 類型推斷限制
+    const profilesTable = supabase.from("profiles") as any;
+    const { error: profileError } = await profilesTable.upsert(
+      {
+        id: data.user.id,
+        is_premium: false
+      },
+      { onConflict: "id" }
+    );
 
     if (profileError) {
       console.error("Profile creation error:", profileError);
