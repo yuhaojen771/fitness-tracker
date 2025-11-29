@@ -202,8 +202,9 @@ export async function cancelSubscriptionAction(): Promise<ActionState> {
 
   // 只將 is_premium 設為 false，保留 subscription_end_date
   // 這樣 premium 功能會保留至到期日，但不會續訂
-  const { error } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { error } = await profilesTable
     .update({
       is_premium: false
       // 不更新 subscription_end_date，保留原到期日
@@ -237,8 +238,9 @@ export async function resetSubscriptionAction(): Promise<ActionState> {
   }
 
   // 將 is_premium 設為 false，subscription_end_date 設為 null
-  const { error } = await supabase
-    .from("profiles")
+  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
+  const profilesTable = supabase.from("profiles") as any;
+  const { error } = await profilesTable
     .update({
       is_premium: false,
       subscription_end_date: null
