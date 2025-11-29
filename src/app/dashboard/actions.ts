@@ -158,8 +158,7 @@ export async function upgradeToPremiumAction(plan: "monthly" | "yearly" = "yearl
   const subscriptionEndDateStr = formatSubscriptionEndDate(subscriptionEndDate);
 
   // 更新 profiles 表的 is_premium 和 subscription_end_date 欄位
-  // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
-  const profilesTable = supabase.from("profiles") as any;
+  // 重用之前定義的 profilesTable 變數
   const { error } = await profilesTable.upsert(
     {
       id: user.id,
