@@ -28,17 +28,17 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 shadow-xl dark:bg-slate-800 sm:p-6"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 shadow-xl dark:bg-slate-800 sm:p-6 premium-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold dark:text-slate-100 sm:text-xl break-words flex-1 min-w-0">
+        <div className="mb-4 sm:mb-5 flex items-start justify-between gap-3 sm:gap-4">
+          <h2 className="text-lg font-semibold dark:text-slate-100 sm:text-xl break-words flex-1 min-w-0 leading-tight">
             升級至 Premium 會員
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            className="shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1 -mt-1 -mr-1"
             aria-label="關閉"
           >
             <svg
@@ -58,36 +58,36 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
         </div>
 
         <div className="space-y-4">
-          <p className="text-slate-600 dark:text-slate-400 break-words">
+          <p className="text-slate-600 dark:text-slate-400 break-words leading-relaxed">
             升級至 Premium 以解鎖更多功能與更完整的健康洞察：
           </p>
 
-          <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-            <li className="flex items-start gap-2">
-              <span className="text-emerald-500 shrink-0 mt-0.5">📊</span>
-              <span className="break-words flex-1 min-w-0">深度趨勢分析：包含 90 天/年度長效圖表及飲食關鍵字關聯分析</span>
+          <ul className="space-y-2.5 text-sm text-slate-700 dark:text-slate-300">
+            <li className="flex items-start gap-2.5">
+              <span className="text-emerald-500 shrink-0 mt-0.5 text-base">📊</span>
+              <span className="break-words flex-1 min-w-0 leading-relaxed">深度趨勢分析：包含 90 天/年度長效圖表及飲食關鍵字關聯分析</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-emerald-500 shrink-0 mt-0.5">💾</span>
-              <span className="break-words flex-1 min-w-0">數據匯出（CSV / JSON）與備份，方便另存與分析</span>
+            <li className="flex items-start gap-2.5">
+              <span className="text-emerald-500 shrink-0 mt-0.5 text-base">💾</span>
+              <span className="break-words flex-1 min-w-0 leading-relaxed">數據匯出（CSV / JSON）與備份，方便另存與分析</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-emerald-500 shrink-0 mt-0.5">🔒</span>
-              <span className="break-words flex-1 min-w-0">完整歷史記錄與長期體重趨勢圖永久保存（免費用戶僅可查看最近 7 天記錄）</span>
+            <li className="flex items-start gap-2.5">
+              <span className="text-emerald-500 shrink-0 mt-0.5 text-base">🔒</span>
+              <span className="break-words flex-1 min-w-0 leading-relaxed">完整歷史記錄與長期體重趨勢圖永久保存（免費用戶僅可查看最近 7 天記錄）</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-emerald-500 shrink-0 mt-0.5">✓</span>
-              <span className="break-words flex-1 min-w-0">無限制歷史記錄存取</span>
+            <li className="flex items-start gap-2.5">
+              <span className="text-emerald-500 shrink-0 mt-0.5 text-base">✓</span>
+              <span className="break-words flex-1 min-w-0 leading-relaxed">無限制歷史記錄存取</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-emerald-500 shrink-0 mt-0.5">✓</span>
-              <span className="break-words flex-1 min-w-0">優先客戶支援</span>
+            <li className="flex items-start gap-2.5">
+              <span className="text-emerald-500 shrink-0 mt-0.5 text-base">✓</span>
+              <span className="break-words flex-1 min-w-0 leading-relaxed">優先客戶支援</span>
             </li>
           </ul>
 
           {/* 價格方案（以 USD 為主，附上大約台幣換算說明） */}
-          <div className="space-y-3 rounded-lg bg-slate-50 p-3 sm:p-4 dark:bg-slate-700">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 break-words">
+          <div className="space-y-3 rounded-lg bg-slate-50 p-3 sm:p-4 dark:bg-slate-700 premium-plan-section">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 break-words mb-1">
               選擇訂閱方案：
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -95,13 +95,13 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
               <button
                 type="button"
                 onClick={() => setSelectedPlan("monthly")}
-                className={`flex-1 rounded-md border-2 p-3 sm:p-4 text-left transition-all min-w-0 ${
+                className={`flex-1 rounded-md border-2 p-3 sm:p-4 text-left transition-all min-w-0 premium-plan-card ${
                   selectedPlan === "monthly"
                     ? "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900/30"
                     : "border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-800"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center justify-between gap-2 mb-2.5">
                   <p className={`text-xs font-semibold break-words ${
                     selectedPlan === "monthly"
                       ? "text-emerald-700 dark:text-emerald-300"
@@ -110,10 +110,10 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
                     月繳方案
                   </p>
                   {selectedPlan === "monthly" && (
-                    <span className="text-emerald-600 dark:text-emerald-400 shrink-0">✓</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 shrink-0 text-base">✓</span>
                   )}
                 </div>
-                <div className="mt-1 flex items-baseline gap-1 flex-wrap">
+                <div className="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
                   <span className={`text-xl sm:text-2xl font-bold break-words ${
                     selectedPlan === "monthly"
                       ? "text-emerald-900 dark:text-emerald-100"
@@ -129,7 +129,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
                     / 月
                   </span>
                 </div>
-                <p className={`mt-2 text-xs break-words leading-relaxed ${
+                <p className={`mt-2.5 text-xs break-words leading-relaxed ${
                   selectedPlan === "monthly"
                     ? "text-emerald-800 dark:text-emerald-200"
                     : "text-slate-500 dark:text-slate-400"
@@ -142,13 +142,13 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
               <button
                 type="button"
                 onClick={() => setSelectedPlan("yearly")}
-                className={`flex-1 rounded-md border-2 p-3 sm:p-4 text-left transition-all min-w-0 ${
+                className={`flex-1 rounded-md border-2 p-3 sm:p-4 text-left transition-all min-w-0 premium-plan-card ${
                   selectedPlan === "yearly"
                     ? "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900/30"
                     : "border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-800"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className={`text-xs font-semibold break-words ${
                       selectedPlan === "yearly"
@@ -162,10 +162,10 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
                     </span>
                   </div>
                   {selectedPlan === "yearly" && (
-                    <span className="text-emerald-600 dark:text-emerald-400 shrink-0">✓</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 shrink-0 text-base">✓</span>
                   )}
                 </div>
-                <div className="mt-1 flex items-baseline gap-1 flex-wrap">
+                <div className="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
                   <span className={`text-xl sm:text-2xl font-bold break-words ${
                     selectedPlan === "yearly"
                       ? "text-emerald-900 dark:text-emerald-100"
@@ -181,7 +181,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
                     / 年
                   </span>
                 </div>
-                <p className={`mt-2 text-xs break-words leading-relaxed ${
+                <p className={`mt-2.5 text-xs break-words leading-relaxed ${
                   selectedPlan === "yearly"
                     ? "text-emerald-800 dark:text-emerald-200"
                     : "text-slate-500 dark:text-slate-400"
@@ -230,7 +230,7 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             </a>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400 break-words leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-400 break-words leading-relaxed mt-2">
             💳 付款完成後，您的 Premium 會員資格將自動啟用。如遇問題，請聯繫客服。
           </p>
         </div>

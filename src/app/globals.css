@@ -91,3 +91,37 @@ body {
   padding: 0.625rem 1rem !important; /* 增加內邊距以配合更大的字體 */
 }
 
+/* Premium Modal 在大字體模式下的特殊樣式 */
+.font-large .premium-modal {
+  padding: 1rem 0.75rem !important; /* 減少 padding 以適應更大的字體 */
+}
+
+.font-large .premium-modal h2 {
+  margin-bottom: 1.25rem !important; /* 增加標題下方間距 */
+}
+
+.font-large .premium-modal .premium-plan-section {
+  padding: 1rem !important; /* 增加方案區域的 padding */
+  gap: 1rem !important; /* 增加間距 */
+}
+
+.font-large .premium-modal .premium-plan-card {
+  padding: 1rem !important; /* 增加卡片內邊距 */
+}
+
+.font-large .premium-modal .premium-plan-card > div:first-child {
+  margin-bottom: 0.75rem !important; /* 增加標題和價格之間的間距 */
+}
+
+.font-large .premium-modal .premium-plan-card p:last-child {
+  margin-top: 0.75rem !important; /* 增加價格和描述之間的間距 */
+}
+
+.font-large .premium-modal ul {
+  gap: 0.75rem !important; /* 增加列表項之間的間距 */
+}
+
+.font-large .premium-modal ul li {
+  gap: 0.75rem !important; /* 增加圖標和文字之間的間距 */
+}
+
