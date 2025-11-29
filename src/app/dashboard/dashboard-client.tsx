@@ -105,6 +105,7 @@ export function DashboardClient({
   const [isPending, startTransition] = useTransition();
   const [filteredRecords, setFilteredRecords] = useState<DailyRecordRow[]>(visibleRecords);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [dietNotesLength, setDietNotesLength] = useState(0);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -126,6 +127,11 @@ export function DashboardClient({
   // 如果正在編輯，使用編輯的記錄資料；否則使用今天的日期
   const formDate = editingRecord?.date || today;
   const formDietNotes = editingRecord?.diet_notes || "";
+  
+  // 當編輯記錄改變時，更新字數計數
+  useEffect(() => {
+    setDietNotesLength(formDietNotes.length);
+  }, [formDietNotes]);
   
   // 根據單位轉換體重顯示值
   const getFormWeight = (): string => {
@@ -361,16 +367,28 @@ export function DashboardClient({
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              飲食記錄
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                飲食記錄
+              </label>
+              <span className={`text-xs ${dietNotesLength > 1000 ? 'text-red-500' : dietNotesLength > 900 ? 'text-amber-500' : 'text-slate-500'} dark:text-slate-400`}>
+                {dietNotesLength}/1000
+              </span>
+            </div>
             <textarea
               name="diet_notes"
               rows={4}
+              maxLength={1000}
               defaultValue={formDietNotes}
               placeholder="記錄今天的飲食內容..."
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 dark:placeholder:text-slate-400"
+              onChange={(e) => {
+                setDietNotesLength(e.target.value.length);
+              }}
             />
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              最多 1000 個字元（約 500 個中文字），防止輸入過長內容造成系統負擔
+            </p>
           </div>
 
           {state.error && (

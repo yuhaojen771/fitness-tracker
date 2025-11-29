@@ -40,11 +40,17 @@ export function FilterControls({
   // 處理開始日期變更（非 Premium 用戶驗證）
   const handleStartDateChange = (value: string) => {
     if (!isPremium && value) {
+      // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        alert("免費用戶只能查看最近 7 天的記錄。請升級 Premium 以查看完整歷史記錄。");
-        if (onPremiumRequired) {
-          onPremiumRequired();
-        }
+        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
+        setStartDate("");
+        setEndDate("");
+        // 立即打開升級畫面
+        setTimeout(() => {
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
+        }, 100);
         return;
       }
       // 如果已選擇結束日期，檢查範圍是否超過 7 天
@@ -53,10 +59,14 @@ export function FilterControls({
         const end = new Date(endDate);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          alert("免費用戶的篩選日期範圍不能超過 7 天。請升級 Premium 以查看更長時間的記錄。");
-          if (onPremiumRequired) {
-            onPremiumRequired();
-          }
+          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
+          setStartDate("");
+          setEndDate("");
+          setTimeout(() => {
+            if (onPremiumRequired) {
+              onPremiumRequired();
+            }
+          }, 100);
           return;
         }
       }
@@ -71,11 +81,17 @@ export function FilterControls({
         alert("無法選擇未來的日期。");
         return;
       }
+      // 檢查日期是否早於 7 天前
       if (value < sevenDaysAgoStr) {
-        alert("免費用戶只能查看最近 7 天的記錄。請升級 Premium 以查看完整歷史記錄。");
-        if (onPremiumRequired) {
-          onPremiumRequired();
-        }
+        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
+        setStartDate("");
+        setEndDate("");
+        // 立即打開升級畫面
+        setTimeout(() => {
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
+        }, 100);
         return;
       }
       // 如果已選擇開始日期，檢查範圍是否超過 7 天
@@ -84,10 +100,14 @@ export function FilterControls({
         const end = new Date(value);
         const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays > 7) {
-          alert("免費用戶的篩選日期範圍不能超過 7 天。請升級 Premium 以查看更長時間的記錄。");
-          if (onPremiumRequired) {
-            onPremiumRequired();
-          }
+          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
+          setStartDate("");
+          setEndDate("");
+          setTimeout(() => {
+            if (onPremiumRequired) {
+              onPremiumRequired();
+            }
+          }, 100);
           return;
         }
       }
@@ -97,6 +117,65 @@ export function FilterControls({
 
   // 應用篩選和排序
   const applyFilters = () => {
+    // 非 Premium 用戶的日期範圍驗證（在應用篩選前檢查）
+    if (!isPremium && (startDate || endDate)) {
+      let shouldClearDates = false;
+      
+      // 檢查開始日期是否在允許範圍內（不能早於 7 天前）
+      if (startDate && startDate < sevenDaysAgoStr) {
+        alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
+        setStartDate("");
+        setEndDate("");
+        // 立即打開升級畫面
+        if (onPremiumRequired) {
+          setTimeout(() => {
+            onPremiumRequired();
+          }, 100);
+        }
+        return;
+      }
+      
+      // 檢查結束日期是否在允許範圍內
+      if (endDate) {
+        if (endDate > todayStr) {
+          alert("無法選擇未來的日期。");
+          setEndDate(todayStr);
+          return;
+        }
+        if (endDate < sevenDaysAgoStr) {
+          alert("免費用戶只能查看最近 7 天的記錄。即將為您開啟 Premium 升級頁面。");
+          setStartDate("");
+          setEndDate("");
+          // 立即打開升級畫面
+          if (onPremiumRequired) {
+            setTimeout(() => {
+              onPremiumRequired();
+            }, 100);
+          }
+          return;
+        }
+      }
+      
+      // 檢查日期範圍是否超過 7 天
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+          alert("免費用戶的篩選日期範圍不能超過 7 天。即將為您開啟 Premium 升級頁面。");
+          setStartDate("");
+          setEndDate("");
+          // 立即打開升級畫面
+          if (onPremiumRequired) {
+            setTimeout(() => {
+              onPremiumRequired();
+            }, 100);
+          }
+          return;
+        }
+      }
+    }
+
     let filtered = [...records];
 
     // 日期範圍篩選

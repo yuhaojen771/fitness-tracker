@@ -51,6 +51,15 @@ export async function saveDailyRecordAction(
     }
   }
 
+  // 驗證飲食記錄長度（最多 1000 個字元，防止惡意輸入大量文字）
+  const MAX_DIET_NOTES_LENGTH = 1000;
+  if (dietNotes && dietNotes.length > MAX_DIET_NOTES_LENGTH) {
+    return { 
+      success: false, 
+      error: `飲食記錄最多只能輸入 ${MAX_DIET_NOTES_LENGTH} 個字元（目前：${dietNotes.length} 個字元）` 
+    };
+  }
+
   // 使用 upsert 建立或更新記錄（根據 user_id + date 的唯一約束）
   // 使用類型斷言避免 TypeScript 編譯時的類型推斷問題
   const dailyRecordsTable = supabase.from("daily_records") as any;
