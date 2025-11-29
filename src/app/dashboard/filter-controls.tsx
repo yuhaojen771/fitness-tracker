@@ -6,18 +6,94 @@ import type { DailyRecordRow } from "@/types/supabase";
 type FilterControlsProps = {
   records: DailyRecordRow[];
   onFilteredRecordsChange: (filtered: DailyRecordRow[]) => void;
+  isPremium: boolean;
+  onPremiumRequired?: () => void;
 };
 
 type SortOption = "date-desc" | "date-asc" | "weight-desc" | "weight-asc";
 
 export function FilterControls({
   records,
-  onFilteredRecordsChange
+  onFilteredRecordsChange,
+  isPremium,
+  onPremiumRequired
 }: FilterControlsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+
+  // 計算日期範圍限制（非 Premium 用戶限制在 7 天內）
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
+  
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
+  
+  // 非 Premium 用戶的最小日期（7 天前）
+  const minDate = isPremium ? undefined : sevenDaysAgoStr;
+  // 最大日期（今天）
+  const maxDate = todayStr;
+
+  // 處理開始日期變更（非 Premium 用戶驗證）
+  const handleStartDateChange = (value: string) => {
+    if (!isPremium && value) {
+      if (value < sevenDaysAgoStr) {
+        alert("免費用戶只能查看最近 7 天的記錄。請升級 Premium 以查看完整歷史記錄。");
+        if (onPremiumRequired) {
+          onPremiumRequired();
+        }
+        return;
+      }
+      // 如果已選擇結束日期，檢查範圍是否超過 7 天
+      if (endDate) {
+        const start = new Date(value);
+        const end = new Date(endDate);
+        const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+          alert("免費用戶的篩選日期範圍不能超過 7 天。請升級 Premium 以查看更長時間的記錄。");
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
+          return;
+        }
+      }
+    }
+    setStartDate(value);
+  };
+
+  // 處理結束日期變更（非 Premium 用戶驗證）
+  const handleEndDateChange = (value: string) => {
+    if (!isPremium && value) {
+      if (value > todayStr) {
+        alert("無法選擇未來的日期。");
+        return;
+      }
+      if (value < sevenDaysAgoStr) {
+        alert("免費用戶只能查看最近 7 天的記錄。請升級 Premium 以查看完整歷史記錄。");
+        if (onPremiumRequired) {
+          onPremiumRequired();
+        }
+        return;
+      }
+      // 如果已選擇開始日期，檢查範圍是否超過 7 天
+      if (startDate) {
+        const start = new Date(startDate);
+        const end = new Date(value);
+        const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 7) {
+          alert("免費用戶的篩選日期範圍不能超過 7 天。請升級 Premium 以查看更長時間的記錄。");
+          if (onPremiumRequired) {
+            onPremiumRequired();
+          }
+          return;
+        }
+      }
+    }
+    setEndDate(value);
+  };
 
   // 應用篩選和排序
   const applyFilters = () => {
@@ -143,9 +219,16 @@ export function FilterControls({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              min={minDate}
+              max={maxDate}
               className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             />
+            {!isPremium && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                僅可選擇最近 7 天內
+              </p>
+            )}
           </div>
           <div className="w-full">
             <label className="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300 sm:text-sm">
@@ -154,9 +237,16 @@ export function FilterControls({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => handleEndDateChange(e.target.value)}
+              min={minDate}
+              max={maxDate}
               className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
             />
+            {!isPremium && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                僅可選擇最近 7 天內
+              </p>
+            )}
           </div>
         </div>
 

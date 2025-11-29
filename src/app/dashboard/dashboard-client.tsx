@@ -403,6 +403,8 @@ export function DashboardClient({
         <FilterControls
           records={visibleRecords}
           onFilteredRecordsChange={setFilteredRecords}
+          isPremium={isPremium}
+          onPremiumRequired={() => setIsPremiumModalOpen(true)}
         />
       )}
 
