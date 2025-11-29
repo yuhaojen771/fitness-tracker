@@ -175,7 +175,7 @@ export async function getAllUsersAction(): Promise<{
   // 注意：獲取用戶 email 需要 Supabase Admin API
   // 由於客戶端限制，這裡先返回基本資訊
   // email 可以通過 Supabase Dashboard 或 Admin API 獲取
-  const users = (profiles || []).map((profile) => {
+  const users = (profiles || []).map((profile: any) => {
     return {
       id: profile.id,
       email: "", // 需要在 Supabase Dashboard 的 Authentication 中查看，或配置 Admin API
