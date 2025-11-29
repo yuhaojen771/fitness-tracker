@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cancelSubscriptionAction, upgradeToPremiumAction, resetSubscriptionAction } from "./actions";
 import { isPremiumActive, getDaysRemaining } from "@/lib/subscription-utils";
 import type { ProfileRow } from "@/types/supabase";
@@ -39,6 +39,45 @@ export function SubscriptionManagement({
     }
     return false;
   });
+
+  // 檢查測試模式的函數（提取出來以便重用）
+  const checkTestMode = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
+      const testMode = window.localStorage.getItem("enableTestMode") === "true";
+      const newIsDev = isLocalhost || testMode;
+      setIsDevelopment(newIsDev);
+      return newIsDev;
+    }
+    return false;
+  }, []);
+
+  // 監聽 localStorage 變化，以便在設置 enableTestMode 後立即更新
+  useEffect(() => {
+    // 模態框打開時立即檢查一次
+    if (isOpen) {
+      checkTestMode();
+    }
+
+    // 監聽 storage 事件（當其他標籤頁修改 localStorage 時）
+    window.addEventListener("storage", checkTestMode);
+
+    // 當模態框打開時，頻繁檢查（用於檢測同一頁面內的 localStorage 變化）
+    const interval = isOpen ? setInterval(checkTestMode, 500) : null;
+
+    return () => {
+      window.removeEventListener("storage", checkTestMode);
+      if (interval) clearInterval(interval);
+    };
+  }, [isOpen, checkTestMode]); // 當模態框打開/關閉時重新設置監聽器
+
+  // 當模態框打開時，立即檢查測試模式狀態
+  useEffect(() => {
+    if (isOpen) {
+      checkTestMode();
+    }
+  }, [isOpen, checkTestMode]);
 
   if (!isOpen) return null;
 
@@ -217,16 +256,67 @@ export function SubscriptionManagement({
           
           {/* 如果不是開發模式，顯示提示 */}
           {!isDevelopment && !isActive && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-700">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                如需測試 Premium 功能，請在瀏覽器控制台執行：
-              </p>
-              <code className="mt-2 block rounded bg-slate-100 p-2 text-xs dark:bg-slate-800">
-                localStorage.setItem('enableTestMode', 'true')
-              </code>
-              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                然後重新載入頁面
-              </p>
+            <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+              <div className="mb-3">
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                  🧪 啟用測試模式
+                </h3>
+                <p className="mt-1 text-xs text-blue-800 dark:text-blue-200">
+                  如需測試 Premium 功能，請按照以下步驟：
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    步驟 1：開啟瀏覽器控制台（F12 或右鍵 → 檢查）
+                  </p>
+                  <p className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    步驟 2：在控制台執行以下命令：
+                  </p>
+                  <code className="mt-1 block rounded bg-blue-100 p-2 text-xs dark:bg-blue-800 font-mono">
+                    localStorage.setItem('enableTestMode', 'true')
+                  </code>
+                </div>
+                {/* 顯示當前測試模式狀態 */}
+                <div className="rounded bg-blue-100 p-2 text-xs dark:bg-blue-800">
+                  <p className="text-blue-900 dark:text-blue-100">
+                    當前狀態：{typeof window !== "undefined" && window.localStorage.getItem("enableTestMode") === "true" 
+                      ? "✅ 測試模式已啟用" 
+                      : "❌ 測試模式未啟用"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 設置 localStorage
+                      if (typeof window !== "undefined") {
+                        window.localStorage.setItem("enableTestMode", "true");
+                        // 等待一小段時間後再檢查，確保設置完成
+                        setTimeout(() => {
+                          checkTestMode();
+                        }, 100);
+                      }
+                    }}
+                    className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600"
+                  >
+                    自動設置並刷新
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 強制重新檢查測試模式
+                      checkTestMode();
+                    }}
+                    className="flex-1 rounded-md border border-blue-600 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:border-blue-500 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                  >
+                    🔄 手動刷新狀態
+                  </button>
+                </div>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  💡 提示：如果您已在控制台執行了命令，請點擊「手動刷新狀態」按鈕，或者重新載入頁面。
+                </p>
+              </div>
             </div>
           )}
 
