@@ -49,7 +49,7 @@ export function StatsCards({ records }: StatsCardsProps) {
     }
   }, []);
 
-  // 取得有體重數據的記錄
+  // 取得有體重數據的記錄，按日期升序排列（最早到最新）
   const weightRecords = records
     .filter((r) => r.weight !== null)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -66,11 +66,17 @@ export function StatsCards({ records }: StatsCardsProps) {
       : null;
 
   // 體重變化（最新 vs 最早）
-  const weightChange =
-    weightRecords.length >= 2
-      ? (weightRecords[weightRecords.length - 1].weight || 0) -
-        (weightRecords[0].weight || 0)
-      : null;
+  // weightRecords 已按日期升序排列，所以：
+  // - weightRecords[0] 是最早的記錄（最早的日期，最初的體重）
+  // - weightRecords[weightRecords.length - 1] 是最新的記錄（最新的日期，現在的體重）
+  // 計算：最新體重 - 最早體重
+  // 結果：正數 = 體重增加（上升，紅色），負數 = 體重減少（下降，綠色）
+  let weightChange: number | null = null;
+  if (weightRecords.length >= 2) {
+    const earliestWeight = weightRecords[0].weight || 0;
+    const latestWeight = weightRecords[weightRecords.length - 1].weight || 0;
+    weightChange = latestWeight - earliestWeight;
+  }
 
   // 最近記錄天數
   const recentDays = records.length > 0
@@ -168,7 +174,7 @@ export function StatsCards({ records }: StatsCardsProps) {
             <p className="text-sm text-slate-600 dark:text-slate-400">體重變化</p>
             <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">
               {weightChange !== null
-                ? `${weightChange > 0 ? "+" : ""}${formatWeight(Math.abs(weightChange), weightUnit)}`
+                ? `${weightChange > 0 ? "+" : weightChange < 0 ? "-" : ""}${formatWeight(Math.abs(weightChange), weightUnit)}`
                 : "—"}
             </p>
             {weightChange !== null && (
@@ -199,18 +205,20 @@ export function StatsCards({ records }: StatsCardsProps) {
               viewBox="0 0 24 24"
             >
               {weightChange !== null && weightChange < 0 ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              ) : (
+                // 下降圖示（綠色，體重減少）
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                />
+              ) : (
+                // 上升圖示（紅色，體重增加）
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                 />
               )}
             </svg>
