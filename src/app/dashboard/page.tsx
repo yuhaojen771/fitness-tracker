@@ -67,8 +67,23 @@ export default async function DashboardPage() {
     console.error("Error fetching records:", recordsError);
   }
 
+  // 判斷是否為開發環境
+  const isDevelopment = process.env.NODE_ENV === "development";
+
   return (
     <section className="space-y-4">
+      {/* 開發環境測試模式提示橫幅 */}
+      {isDevelopment && (
+        <div className="rounded-lg border-2 border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-900/20">
+          <div className="flex items-start gap-2">
+            <span className="text-lg shrink-0">⚠️</span>
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+              測試模式啟用：請手動檢查 Supabase 中的 is_premium 欄位進行狀態更新。
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <h1 className="text-2xl font-semibold">儀表板</h1>
