@@ -43,6 +43,32 @@
 5. **截圖**（檔案上傳）
    - 描述：如有截圖，請上傳（選填）
 
+6. **會員類型**（簡答文字，自動填入，隱藏欄位）
+   - 描述：自動標記 Premium 會員
+   - 設為「簡答」類型
+   - 在「回應驗證」中設定預設值（見下方說明）
+
+#### ⭐ Premium 會員標記設定
+
+系統會自動在表單 URL 中添加以下參數：
+- `premium=true` 或 `premium=false`
+- `user_type=premium` 或 `user_type=free`
+
+**在 Google Form 中使用這些參數：**
+
+1. **方法 A：使用 Google Apps Script（推薦）**
+   - 在 Google Form 中點擊「⋮」→「指令碼編輯器」
+   - 添加腳本自動讀取 URL 參數並填入表單欄位
+   - 詳細步驟見下方「Premium 會員自動標記」章節
+
+2. **方法 B：手動查看（簡單但需手動）**
+   - 在表單回應中查看 URL 參數
+   - 手動標記 Premium 會員的回應
+
+3. **方法 C：使用 Tally Form（更簡單）**
+   - Tally Form 支援 URL 參數預填
+   - 可以直接在表單欄位中使用 `{{premium}}` 或 `{{user_type}}`
+
 ### 1.4 設定表單選項
 
 1. 點擊右上角「設定」⚙️
@@ -178,14 +204,128 @@ NEXT_PUBLIC_FEEDBACK_FORM_URL=https://forms.gle/xxxxxxxxxxxxx
 5. **聯絡方式**：簡答文字
 6. **優先級**：單選（高 / 中 / 低）
 
+## ⭐ Premium 會員自動標記
+
+系統會自動在表單 URL 中添加 Premium 狀態參數，讓您能夠識別 Premium 會員的回饋。
+
+### URL 參數說明
+
+當用戶點擊回饋按鈕時，URL 會自動包含：
+- `premium=true`（Premium 會員）或 `premium=false`（免費用戶）
+- `user_type=premium` 或 `user_type=free`
+
+**範例 URL：**
+```
+https://forms.gle/xxxxx?premium=true&user_type=premium
+```
+
+### 在 Google Form 中使用
+
+#### 方法 1：使用 Google Apps Script（自動填入）
+
+1. **在 Google Form 中添加「會員類型」欄位**
+   - 新增一個「簡答」類型的問題
+   - 標題：`會員類型` 或 `Premium 狀態`
+   - 設為選填（因為會自動填入）
+
+2. **建立 Google Apps Script**
+   - 在 Google Form 中點擊「⋮」→「指令碼編輯器」
+   - 貼上以下腳本：
+
+```javascript
+function onFormSubmit(e) {
+  // 取得表單回應
+  const formResponse = e.response;
+  const itemResponses = formResponse.getItemResponses();
+  
+  // 從 URL 參數取得 Premium 狀態（需要在表單提交時傳遞）
+  // 注意：Google Form 不直接支援 URL 參數，需要使用其他方法
+}
+
+// 替代方案：使用表單預填連結
+function createPrefilledLink() {
+  const form = FormApp.getActiveForm();
+  const items = form.getItems();
+  
+  // 找到「會員類型」欄位
+  let memberTypeItem = null;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].getTitle() === "會員類型") {
+      memberTypeItem = items[i].asTextItem();
+      break;
+    }
+  }
+  
+  if (memberTypeItem) {
+    // 建立預填連結（Premium）
+    const prefilledUrl = form.getPublishedUrl() + 
+      "?entry." + memberTypeItem.getId() + "=Premium會員";
+    Logger.log("Premium 預填連結: " + prefilledUrl);
+  }
+}
+```
+
+#### 方法 2：使用 Tally Form（更簡單，推薦）
+
+Tally Form 支援 URL 參數預填，設定更簡單：
+
+1. **建立 Tally Form**
+   - 前往 [Tally](https://tally.so)
+   - 建立新表單
+
+2. **添加「會員類型」欄位**
+   - 新增「簡答」或「單選」欄位
+   - 標題：`會員類型`
+   - 在欄位設定中啟用「預填」
+
+3. **設定預填變數**
+   - 在欄位設定中，設定預填變數名稱為 `user_type`
+   - 或使用 `premium` 參數
+
+4. **表單會自動讀取 URL 參數**
+   - 當 URL 包含 `?user_type=premium` 時，欄位會自動填入「premium」
+   - 當 URL 包含 `?user_type=free` 時，欄位會自動填入「free」
+
+#### 方法 3：手動查看（最簡單）
+
+1. **在表單回應中查看**
+   - 前往 Google Form → 「回應」標籤
+   - 查看每個回應的提交時間
+   - 在回應詳情中查看提交來源（如果 Google Form 有記錄）
+
+2. **使用 Google Sheets 分析**
+   - 將回應匯出到 Google Sheets
+   - 手動標記 Premium 會員（根據 Email 或 User ID）
+
+### 在表單回應中識別 Premium 會員
+
+**建議做法：**
+
+1. **添加「會員類型」欄位到表單**
+   - 設為「簡答」類型
+   - 標題：「會員類型（系統自動填入）」
+   - 在說明中告知用戶：「此欄位會自動填入，無需手動填寫」
+
+2. **使用表單預填功能**
+   - 建立兩個不同的表單連結：
+     - Premium 會員連結：包含 `?entry.xxxxx=Premium會員`
+     - 免費用戶連結：包含 `?entry.xxxxx=免費用戶`
+   - 但這需要修改 FeedbackButton 來使用不同的連結
+
+3. **在回應中手動標記**
+   - 根據用戶 Email 查詢 Premium 狀態
+   - 在 Google Sheets 中添加「Premium 狀態」欄位
+
 ## ✅ 檢查清單
 
 - [ ] 建立 Google Form 並設定問題
+- [ ] 添加「會員類型」欄位（用於標記 Premium）
 - [ ] 取得表單分享連結
 - [ ] 測試表單提交功能
 - [ ] 在 `.env.local` 設定環境變數
 - [ ] 重新啟動開發伺服器
 - [ ] 驗證回饋按鈕顯示和功能
+- [ ] 測試 Premium 會員標記功能
 - [ ] 在部署環境設定環境變數
 - [ ] 測試生產環境功能
 
