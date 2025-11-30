@@ -113,13 +113,16 @@ export async function POST(request: NextRequest) {
       ? "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5"
       : "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
     
-    console.log("ECPay payment order created:", {
-      plan,
-      userId: user.id,
-      orderNo,
-      amount,
-      customField
-    });
+    // 移除敏感資訊的日誌記錄（生產環境）
+    if (process.env.NODE_ENV === "development") {
+      console.log("ECPay payment order created:", {
+        plan,
+        userId: user.id.substring(0, 8) + "...", // 只記錄部分 ID
+        orderNo,
+        amount,
+        customField: customField.substring(0, 20) + "..." // 只記錄部分 customField
+      });
+    }
     
     // 返回付款表單資料（前端需要提交表單到綠界）
     return NextResponse.json({

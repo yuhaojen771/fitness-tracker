@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { checkDuplicateRequest } from "@/lib/security/webhook-verification";
 import crypto from "crypto";
 
 /**
@@ -7,6 +8,10 @@ import crypto from "crypto";
  * 
  * 處理綠界付款完成後的回傳通知
  * 驗證檢查碼後更新用戶訂閱狀態
+ * 
+ * 安全措施：
+ * - CheckMacValue 驗證（綠界官方驗證）
+ * - 重複請求檢查（防止重複處理）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +22,19 @@ export async function POST(request: NextRequest) {
     formData.forEach((value, key) => {
       params[key] = value.toString();
     });
+    
+    // 檢查重複請求（使用訂單編號）
+    const tradeNo = params.MerchantTradeNo;
+    if (tradeNo && checkDuplicateRequest(tradeNo)) {
+      console.warn("Duplicate ECPay webhook request detected:", tradeNo);
+      // 返回成功，但不再處理（idempotency）
+      return new NextResponse("1|OK", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8"
+        }
+      });
+    }
     
     // 檢查必要的環境變數
     const hashKey = process.env.ECPAY_HASH_KEY;
@@ -133,7 +151,10 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      console.log(`ECPay subscription updated for user ${userId}, plan: ${plan}`);
+      // 移除敏感資訊的日誌記錄
+      if (process.env.NODE_ENV === "development") {
+        console.log(`ECPay subscription updated for user ${userId.substring(0, 8)}..., plan: ${plan}`);
+      }
     }
     
     // 返回成功回應（綠界要求返回 "1|OK"）

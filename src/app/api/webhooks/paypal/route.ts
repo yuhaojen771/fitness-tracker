@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { checkDuplicateRequest } from "@/lib/security/webhook-verification";
 
 /**
  * PayPal IPN (Instant Payment Notification) Webhook 處理
  * 
  * 當用戶完成 PayPal 付款後，PayPal 會發送 IPN 通知到此端點
  * 我們驗證通知後，自動更新用戶的訂閱狀態
+ * 
+ * 安全措施：
+ * - IPN 驗證（PayPal 官方驗證）
+ * - 重複請求檢查（防止重複處理）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +21,14 @@ export async function POST(request: NextRequest) {
     formData.forEach((value, key) => {
       params[key] = value.toString();
     });
+    
+    // 檢查重複請求（使用交易編號）
+    const txnId = params.txn_id;
+    if (txnId && checkDuplicateRequest(txnId)) {
+      console.warn("Duplicate PayPal IPN request detected:", txnId);
+      // 返回成功，但不再處理（idempotency）
+      return NextResponse.json({ received: true, duplicate: true });
+    }
     
     // PayPal IPN 驗證 URL
     // 根據環境選擇正式或沙盒 URL
@@ -135,7 +148,10 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      console.log(`Subscription updated for user ${userId}, plan: ${detectedPlan}`);
+      // 移除敏感資訊的日誌記錄
+      if (process.env.NODE_ENV === "development") {
+        console.log(`Subscription updated for user ${userId.substring(0, 8)}..., plan: ${detectedPlan}`);
+      }
     }
     
     // 處理訂閱取消事件
@@ -158,7 +174,10 @@ export async function POST(request: NextRequest) {
           })
           .eq("id", userId);
         
-        console.log(`Subscription cancelled for user ${userId}`);
+        // 移除敏感資訊的日誌記錄
+        if (process.env.NODE_ENV === "development") {
+          console.log(`Subscription cancelled for user ${userId.substring(0, 8)}...`);
+        }
       }
     }
     
@@ -173,8 +192,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 允許 GET 請求用於 PayPal IPN 測試
+// GET 請求僅用於健康檢查（生產環境應移除或限制）
 export async function GET(request: NextRequest) {
+  // 生產環境不暴露端點資訊
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Not Found" },
+      { status: 404 }
+    );
+  }
+  
+  // 開發環境允許健康檢查
   return NextResponse.json({
     message: "PayPal IPN endpoint is active",
     timestamp: new Date().toISOString(),

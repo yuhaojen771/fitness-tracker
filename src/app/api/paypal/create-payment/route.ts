@@ -89,12 +89,15 @@ export async function POST(request: NextRequest) {
       // 也可以使用 item_number 參數（某些 PayPal 按鈕類型支援）
       url.searchParams.set("item_number", customField);
       
-      console.log("PayPal payment URL created:", {
-        plan,
-        userId: user.id,
-        customField,
-        url: url.toString()
-      });
+      // 移除敏感資訊的日誌記錄（生產環境）
+      if (process.env.NODE_ENV === "development") {
+        console.log("PayPal payment URL created:", {
+          plan,
+          userId: user.id.substring(0, 8) + "...", // 只記錄部分 ID
+          customField,
+          url: url.toString()
+        });
+      }
       
       return NextResponse.json({ 
         url: url.toString(),
