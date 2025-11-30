@@ -81,10 +81,10 @@ export function FeedbackButton() {
       // 添加 Premium 狀態參數
       if (isPremium === true) {
         url.searchParams.set("premium", "true");
-        url.searchParams.set("user_type", "premium");
+        url.searchParams.set("user_status", "premium");
       } else if (isPremium === false) {
         url.searchParams.set("premium", "false");
-        url.searchParams.set("user_type", "free");
+        url.searchParams.set("user_status", "free");
       }
       // 如果還在載入中，不添加參數
       
@@ -93,9 +93,9 @@ export function FeedbackButton() {
       // 如果不是有效的 URL，直接返回原 URL 並添加參數
       const separator = feedbackFormUrl.includes("?") ? "&" : "?";
       if (isPremium === true) {
-        return `${feedbackFormUrl}${separator}premium=true&user_type=premium`;
+        return `${feedbackFormUrl}${separator}premium=true&user_status=premium`;
       } else if (isPremium === false) {
-        return `${feedbackFormUrl}${separator}premium=false&user_type=free`;
+        return `${feedbackFormUrl}${separator}premium=false&user_status=free`;
       }
       return feedbackFormUrl;
     }

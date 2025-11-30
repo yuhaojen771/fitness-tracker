@@ -379,6 +379,14 @@ export function PremiumModal({ isOpen, onClose, onUpgrade }: PremiumModalProps) 
             </button>
           </div>
 
+          {/* 訂閱政策說明 */}
+          <div className="rounded-lg border-2 border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <p className="text-center text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+              <strong className="font-semibold">訂閱政策：</strong>
+              已支付的訂閱期內不退款，但您可隨時取消以停止未來的自動續訂。
+            </p>
+          </div>
+
           {/* 條款同意聲明 */}
           <p className="text-center text-xs text-slate-500 dark:text-slate-400">
             付款即表示您同意{" "}
