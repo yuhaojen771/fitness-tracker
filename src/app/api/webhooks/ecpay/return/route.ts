@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     // 檢查付款狀態
     const rtnCode = params.RtnCode;
     const paymentDate = params.PaymentDate;
-    const tradeNo = params.MerchantTradeNo;
+    // tradeNo 已在上面定義，這裡不需要重複定義
     const customField = params.CustomField1 || "";
     
     // 從自訂欄位取得用戶 ID 和方案
