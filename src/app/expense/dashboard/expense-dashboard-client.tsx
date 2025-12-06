@@ -576,13 +576,12 @@ function CategoryManagementModal({
           )}
 
           {/* 隱藏欄位：parent_category_id */}
-          {isSubCategory && (
-            <input
-              type="hidden"
-              name="parent_category_id"
-              value={editingCategory?.parent_category_id || selectedParentCategory}
-            />
-          )}
+          {/* 主類別時明確設為空字串，次類別時設為選擇的主類別 ID */}
+          <input
+            type="hidden"
+            name="parent_category_id"
+            value={isSubCategory ? (editingCategory?.parent_category_id || selectedParentCategory) : ""}
+          />
 
           <div className="grid gap-3 sm:grid-cols-3">
             <input

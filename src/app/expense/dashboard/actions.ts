@@ -178,22 +178,40 @@ export async function saveExpenseCategoryAction(
     }
   } else {
     // 建立新類別
+    // 確保 parent_category_id 正確處理（空字串轉為 null）
+    const finalParentCategoryId = parentCategoryId && parentCategoryId !== "" ? parentCategoryId : null;
+    
     const { error } = await expenseCategoriesTable.insert({
       user_id: user.id,
       name,
       icon,
       color,
-      parent_category_id: parentCategoryId,
+      parent_category_id: finalParentCategoryId,
       is_default: false
     });
 
     if (error) {
       console.error("Create expense category error:", error);
-      // 如果是重複名稱錯誤
+      // 如果是重複名稱錯誤（唯一約束衝突）
       if (error.code === "23505") {
-        return { success: false, error: "此類別名稱已存在" };
+        if (finalParentCategoryId) {
+          return { success: false, error: "此主類別下已存在相同名稱的次類別" };
+        } else {
+          return { success: false, error: "此主類別名稱已存在" };
+        }
       }
-      return { success: false, error: "建立失敗，請稍後再試" };
+      // 如果是外鍵約束錯誤（parent_category_id 不存在）
+      if (error.code === "23503") {
+        return { success: false, error: "選擇的主類別不存在" };
+      }
+      // 如果是欄位不存在的錯誤（可能是 schema 還沒執行）
+      if (error.code === "42703" || error.message?.includes("parent_category_id")) {
+        return { 
+          success: false, 
+          error: "資料庫尚未更新，請先執行 schema_expense_subcategories.sql" 
+        };
+      }
+      return { success: false, error: `建立失敗：${error.message || "請稍後再試"}` };
     }
   }
 
