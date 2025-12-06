@@ -9,14 +9,16 @@
 在 Supabase Dashboard 中執行以下 SQL：
 
 1. 前往 Supabase Dashboard → SQL Editor
-2. 複製 `supabase/schema_expense.sql` 的內容
-3. 貼上並執行
+2. 先執行 `supabase/schema_expense.sql`（建立基本資料表）
+3. 再執行 `supabase/schema_expense_subcategories.sql`（添加次類別支援）
 
-或者直接執行：
-
+**執行順序：**
 ```sql
--- 執行 schema_expense.sql 中的所有 SQL 語句
+-- 1. 先執行 schema_expense.sql
+-- 2. 再執行 schema_expense_subcategories.sql（添加 parent_category_id 欄位）
 ```
+
+**注意：** 如果已經執行過 `schema_expense.sql`，只需要執行 `schema_expense_subcategories.sql` 即可。
 
 ### 步驟 2：驗證資料表
 
@@ -39,17 +41,21 @@
    - 編輯記錄
    - 刪除記錄
    - 按月份查看記錄
+   - 按主類別篩選記錄
 
 2. **類別管理**
-   - 預設類別（不可刪除）
-   - 自訂類別（可新增/編輯/刪除）
+   - 預設主類別（不可刪除）
+   - 自訂主類別（可新增/編輯/刪除）
+   - **次類別功能**（可為任何主類別新增次類別）
    - 類別圖示和顏色
+   - 層級結構顯示（主類別 > 次類別）
 
 3. **統計功能**
    - 月度總支出
    - 月度總收入
    - 月度結餘
-   - 支出分類統計（圓餅圖/長條圖）
+   - 支出分類統計（長條圖）
+   - 主類別篩選功能
 
 ### 預設類別
 
@@ -88,11 +94,18 @@
 ### 管理類別
 
 1. 點擊「管理類別」按鈕
-2. 新增自訂類別：
+2. 新增主類別：
+   - 選擇「主類別」按鈕
    - 輸入類別名稱
    - 選擇圖示（emoji）
    - 選擇顏色
-3. 編輯或刪除自訂類別
+3. 新增次類別：
+   - 選擇「次類別」按鈕
+   - 選擇主類別
+   - 輸入次類別名稱
+   - 選擇圖示（emoji）
+   - 選擇顏色
+4. 編輯或刪除自訂類別（次類別可獨立編輯/刪除）
 
 ## 📊 資料結構
 
@@ -104,7 +117,7 @@
 | user_id | uuid | 用戶 ID |
 | type | text | 類型：'expense' 或 'income' |
 | amount | numeric(12,2) | 金額 |
-| category_id | uuid | 類別 ID（可為 null） |
+| category_id | uuid | 類別 ID（可為 null，可以是主類別或次類別） |
 | date | date | 日期 |
 | note | text | 備註（可選） |
 | created_at | timestamptz | 建立時間 |
@@ -120,6 +133,7 @@
 | icon | text | 圖示（emoji） |
 | color | text | 顏色（hex code） |
 | is_default | boolean | 是否為預設類別 |
+| parent_category_id | uuid | 父類別 ID（null 表示主類別） |
 | created_at | timestamptz | 建立時間 |
 | updated_at | timestamptz | 更新時間 |
 

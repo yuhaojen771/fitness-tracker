@@ -44,7 +44,19 @@ export function ExpenseDashboardClient({
   const [selectedMonth, setSelectedMonth] = useState<string>(
     new Date().toISOString().slice(0, 7) // YYYY-MM
   );
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
   const [categories, setCategories] = useState(initialCategories);
+
+  // 組織類別結構（主類別和次類別）
+  const organizedCategories = useMemo(() => {
+    const mainCategories = categories.filter((c) => !c.parent_category_id);
+    const subCategories = categories.filter((c) => c.parent_category_id);
+    
+    return mainCategories.map((main) => ({
+      ...main,
+      subCategories: subCategories.filter((sub) => sub.parent_category_id === main.id)
+    }));
+  }, [categories]);
 
   // 當 categories 更新時同步
   useEffect(() => {
@@ -88,14 +100,30 @@ export function ExpenseDashboardClient({
 
     const categoryStatsArray = Object.values(categoryStats).sort((a, b) => b.amount - a.amount);
 
+    // 根據主類別篩選記錄
+    let finalRecords = filteredRecords;
+    if (selectedCategoryFilter !== "all") {
+      // 如果選擇了主類別，只顯示該主類別及其次類別的記錄
+      const mainCategoryId = selectedCategoryFilter;
+      const subCategoryIds = categories
+        .filter((c) => c.parent_category_id === mainCategoryId)
+        .map((c) => c.id);
+      const allCategoryIds = [mainCategoryId, ...subCategoryIds];
+      
+      finalRecords = filteredRecords.filter((record) => {
+        if (!record.category_id) return false;
+        return allCategoryIds.includes(record.category_id);
+      });
+    }
+
     return {
       totalExpense,
       totalIncome,
       balance: totalIncome - totalExpense,
       categoryStats: categoryStatsArray,
-      records: filteredRecords
+      records: finalRecords
     };
-  }, [records, selectedMonth, categories]);
+  }, [records, selectedMonth, categories, selectedCategoryFilter]);
 
   // 當表單成功提交後重置
   useEffect(() => {
@@ -226,10 +254,17 @@ export function ExpenseDashboardClient({
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
               >
                 <option value="">未分類</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.name}
-                  </option>
+                {organizedCategories.map((mainCat) => (
+                  <optgroup key={mainCat.id} label={`${mainCat.icon} ${mainCat.name}`}>
+                    <option value={mainCat.id}>
+                      {mainCat.icon} {mainCat.name}
+                    </option>
+                    {mainCat.subCategories.map((subCat) => (
+                      <option key={subCat.id} value={subCat.id}>
+                        &nbsp;&nbsp;{subCat.icon} {subCat.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
@@ -322,13 +357,31 @@ export function ExpenseDashboardClient({
 
       {/* 記帳列表 */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="mb-4 text-lg font-semibold">記帳記錄</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">記帳記錄</h2>
+          {/* 主類別篩選 */}
+          <select
+            value={selectedCategoryFilter}
+            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+          >
+            <option value="all">全部類別</option>
+            {organizedCategories.map((mainCat) => (
+              <option key={mainCat.id} value={mainCat.id}>
+                {mainCat.icon} {mainCat.name}
+              </option>
+            ))}
+          </select>
+        </div>
         {monthlyStats.records.length === 0 ? (
           <p className="text-center text-slate-500 dark:text-slate-400">尚無記錄</p>
         ) : (
           <div className="space-y-2">
             {monthlyStats.records.map((record) => {
               const category = categories.find((c) => c.id === record.category_id);
+              const parentCategory = category?.parent_category_id
+                ? categories.find((c) => c.id === category.parent_category_id)
+                : null;
               return (
                 <div
                   key={record.id}
@@ -339,6 +392,11 @@ export function ExpenseDashboardClient({
                       <span className="text-lg">{category?.icon || "📝"}</span>
                       <div>
                         <p className="text-sm font-medium">
+                          {parentCategory && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              {parentCategory.icon} {parentCategory.name} /{" "}
+                            </span>
+                          )}
                           {category?.name || "未分類"}
                           {record.note && (
                             <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
@@ -423,9 +481,21 @@ function CategoryManagementModal({
   onDelete: (id: string) => Promise<void>;
 }) {
   const [editingCategory, setEditingCategory] = useState<ExpenseCategoryRow | null>(null);
+  const [isSubCategory, setIsSubCategory] = useState(false);
+  const [selectedParentCategory, setSelectedParentCategory] = useState<string>("");
 
-  const defaultCategories = categories.filter((c) => c.is_default);
-  const customCategories = categories.filter((c) => !c.is_default);
+  // 組織類別結構
+  const mainCategories = categories.filter((c) => !c.parent_category_id);
+  const subCategories = categories.filter((c) => c.parent_category_id);
+  
+  const defaultMainCategories = mainCategories.filter((c) => c.is_default);
+  const customMainCategories = mainCategories.filter((c) => !c.is_default);
+  
+  // 按主類別組織次類別
+  const organizedSubCategories = mainCategories.map((main) => ({
+    main,
+    subs: subCategories.filter((sub) => sub.parent_category_id === main.id)
+  }));
 
   return (
     <div
@@ -450,6 +520,70 @@ function CategoryManagementModal({
         {/* 新增類別表單 */}
         <form action={formAction} className="mb-6 space-y-3 border-b border-slate-200 pb-4 dark:border-slate-700">
           {editingCategory && <input type="hidden" name="id" value={editingCategory.id} />}
+          
+          {/* 類別類型選擇 */}
+          {!editingCategory && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSubCategory(false);
+                  setSelectedParentCategory("");
+                }}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  !isSubCategory
+                    ? "bg-emerald-600 text-white"
+                    : "border border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-300"
+                }`}
+              >
+                主類別
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSubCategory(true)}
+                className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  isSubCategory
+                    ? "bg-emerald-600 text-white"
+                    : "border border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-300"
+                }`}
+              >
+                次類別
+              </button>
+            </div>
+          )}
+
+          {/* 主類別選擇（新增或編輯次類別時顯示） */}
+          {isSubCategory && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                選擇主類別
+              </label>
+              <select
+                value={editingCategory?.parent_category_id || selectedParentCategory}
+                onChange={(e) => setSelectedParentCategory(e.target.value)}
+                required
+                disabled={!!editingCategory} // 編輯時不可更改主類別
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">請選擇主類別</option>
+                {mainCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 隱藏欄位：parent_category_id */}
+          {isSubCategory && (
+            <input
+              type="hidden"
+              name="parent_category_id"
+              value={editingCategory?.parent_category_id || selectedParentCategory}
+            />
+          )}
+
           <div className="grid gap-3 sm:grid-cols-3">
             <input
               type="text"
@@ -488,7 +622,11 @@ function CategoryManagementModal({
             {editingCategory && (
               <button
                 type="button"
-                onClick={() => setEditingCategory(null)}
+                onClick={() => {
+                  setEditingCategory(null);
+                  setIsSubCategory(false);
+                  setSelectedParentCategory("");
+                }}
                 className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
               >
                 取消
@@ -499,57 +637,139 @@ function CategoryManagementModal({
 
         {/* 類別列表 */}
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          <div>
-            <h3 className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-              預設類別
-            </h3>
-            <div className="space-y-1">
-              {defaultCategories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="flex items-center justify-between rounded-md border border-slate-200 p-2 dark:border-slate-700"
-                >
-                  <span>
-                    {cat.icon} {cat.name}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">預設</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {customCategories.length > 0 && (
+          {/* 預設主類別 */}
+          {defaultMainCategories.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                自訂類別
+                預設主類別
               </h3>
               <div className="space-y-1">
-                {customCategories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className="flex items-center justify-between rounded-md border border-slate-200 p-2 dark:border-slate-700"
-                  >
-                    <span>
-                      {cat.icon} {cat.name}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingCategory(cat)}
-                        className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-                      >
-                        編輯
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(cat.id)}
-                        className="text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        刪除
-                      </button>
+                {defaultMainCategories.map((cat) => {
+                  const subs = subCategories.filter((sub) => sub.parent_category_id === cat.id);
+                  return (
+                    <div key={cat.id} className="space-y-1">
+                      <div className="flex items-center justify-between rounded-md border border-slate-200 p-2 dark:border-slate-700">
+                        <span>
+                          {cat.icon} {cat.name}
+                        </span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">預設</span>
+                      </div>
+                      {/* 次類別 */}
+                      {subs.length > 0 && (
+                        <div className="ml-4 space-y-1">
+                          {subs.map((sub) => (
+                            <div
+                              key={sub.id}
+                              className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900"
+                            >
+                              <span className="text-sm">
+                                &nbsp;&nbsp;{sub.icon} {sub.name}
+                              </span>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCategory(sub);
+                                    setIsSubCategory(true);
+                                    setSelectedParentCategory(sub.parent_category_id || "");
+                                  }}
+                                  className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                                >
+                                  編輯
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onDelete(sub.id)}
+                                  className="text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  刪除
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 自訂主類別 */}
+          {customMainCategories.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+                自訂主類別
+              </h3>
+              <div className="space-y-1">
+                {customMainCategories.map((cat) => {
+                  const subs = subCategories.filter((sub) => sub.parent_category_id === cat.id);
+                  return (
+                    <div key={cat.id} className="space-y-1">
+                      <div className="flex items-center justify-between rounded-md border border-slate-200 p-2 dark:border-slate-700">
+                        <span>
+                          {cat.icon} {cat.name}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCategory(cat);
+                              setIsSubCategory(false);
+                              setSelectedParentCategory("");
+                            }}
+                            className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                          >
+                            編輯
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(cat.id)}
+                            className="text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            刪除
+                          </button>
+                        </div>
+                      </div>
+                      {/* 次類別 */}
+                      {subs.length > 0 && (
+                        <div className="ml-4 space-y-1">
+                          {subs.map((sub) => (
+                            <div
+                              key={sub.id}
+                              className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900"
+                            >
+                              <span className="text-sm">
+                                &nbsp;&nbsp;{sub.icon} {sub.name}
+                              </span>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCategory(sub);
+                                    setIsSubCategory(true);
+                                    setSelectedParentCategory(sub.parent_category_id || "");
+                                  }}
+                                  className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                                >
+                                  編輯
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onDelete(sub.id)}
+                                  className="text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  刪除
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

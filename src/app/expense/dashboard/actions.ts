@@ -147,6 +147,7 @@ export async function saveExpenseCategoryAction(
   const name = String(formData.get("name") ?? "").trim();
   const icon = String(formData.get("icon") ?? "").trim() || null;
   const color = String(formData.get("color") ?? "").trim() || null;
+  const parentCategoryId = String(formData.get("parent_category_id") ?? "").trim() || null;
 
   if (!name) {
     return { success: false, error: "請輸入類別名稱" };
@@ -165,7 +166,8 @@ export async function saveExpenseCategoryAction(
       .update({
         name,
         icon,
-        color
+        color,
+        parent_category_id: parentCategoryId
       })
       .eq("id", id)
       .eq("user_id", user.id);
@@ -181,6 +183,7 @@ export async function saveExpenseCategoryAction(
       name,
       icon,
       color,
+      parent_category_id: parentCategoryId,
       is_default: false
     });
 
@@ -224,8 +227,10 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
     return { success: false, error: "無法刪除預設類別" };
   }
 
-  // 檢查是否有記錄使用此類別
+  // 檢查是否有記錄使用此類別（包括主類別和次類別）
   const expenseRecordsTable = supabase.from("expense_records") as any;
+  
+  // 先檢查此類別本身是否有記錄
   const { data: records } = await expenseRecordsTable
     .select("id")
     .eq("category_id", categoryId)
@@ -234,6 +239,26 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
 
   if (records && records.length > 0) {
     return { success: false, error: "此類別仍有記帳記錄，無法刪除" };
+  }
+
+  // 如果是主類別，檢查是否有次類別被使用
+  const { data: subCategories } = await expenseCategoriesTable
+    .select("id")
+    .eq("parent_category_id", categoryId)
+    .eq("user_id", user.id);
+
+  if (subCategories && subCategories.length > 0) {
+    // 檢查是否有記錄使用這些次類別
+    const subCategoryIds = subCategories.map((sub: any) => sub.id);
+    const { data: subRecords } = await expenseRecordsTable
+      .select("id")
+      .in("category_id", subCategoryIds)
+      .eq("user_id", user.id)
+      .limit(1);
+
+    if (subRecords && subRecords.length > 0) {
+      return { success: false, error: "此主類別的次類別仍有記帳記錄，無法刪除" };
+    }
   }
 
   const { error } = await expenseCategoriesTable
