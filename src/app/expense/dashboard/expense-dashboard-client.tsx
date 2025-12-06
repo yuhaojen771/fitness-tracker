@@ -46,6 +46,12 @@ export function ExpenseDashboardClient({
   );
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
   const [categories, setCategories] = useState(initialCategories);
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [isQuickAddSubCategoryOpen, setIsQuickAddSubCategoryOpen] = useState(false);
+  const [quickAddSubCategoryName, setQuickAddSubCategoryName] = useState("");
+  const [quickAddSubCategoryIcon, setQuickAddSubCategoryIcon] = useState("");
+  const [quickAddSubCategoryAmount, setQuickAddSubCategoryAmount] = useState("");
 
   // 組織類別結構（主類別和次類別）
   const organizedCategories = useMemo(() => {
@@ -57,6 +63,51 @@ export function ExpenseDashboardClient({
       subCategories: subCategories.filter((sub) => sub.parent_category_id === main.id)
     }));
   }, [categories]);
+
+  // 主類別列表
+  const mainCategories = useMemo(() => {
+    return categories.filter((c) => !c.parent_category_id);
+  }, [categories]);
+
+  // 當前選擇的主類別下的次類別
+  const currentSubCategories = useMemo(() => {
+    if (!selectedMainCategory) return [];
+    return categories.filter((c) => c.parent_category_id === selectedMainCategory);
+  }, [categories, selectedMainCategory]);
+
+  // 當選擇次類別時，如果有預設金額，自動填入
+  useEffect(() => {
+    if (selectedSubCategory) {
+      const subCategory = categories.find((c) => c.id === selectedSubCategory);
+      if (subCategory?.default_amount) {
+        const amountInput = document.querySelector('input[name="amount"]') as HTMLInputElement;
+        if (amountInput && !amountInput.value) {
+          amountInput.value = subCategory.default_amount.toString();
+        }
+      }
+    }
+  }, [selectedSubCategory, categories]);
+
+  // 當編輯記錄時，設定對應的主類別和次類別
+  useEffect(() => {
+    if (editingRecord?.category_id) {
+      const category = categories.find((c) => c.id === editingRecord.category_id);
+      if (category) {
+        if (category.parent_category_id) {
+          // 是次類別
+          setSelectedMainCategory(category.parent_category_id);
+          setSelectedSubCategory(category.id);
+        } else {
+          // 是主類別
+          setSelectedMainCategory(category.id);
+          setSelectedSubCategory("");
+        }
+      }
+    } else {
+      setSelectedMainCategory("");
+      setSelectedSubCategory("");
+    }
+  }, [editingRecord, categories]);
 
   // 當 categories 更新時同步
   useEffect(() => {
@@ -129,6 +180,8 @@ export function ExpenseDashboardClient({
   useEffect(() => {
     if (state.success) {
       setEditingRecord(null);
+      setSelectedMainCategory("");
+      setSelectedSubCategory("");
       // 重新載入頁面以更新資料
       window.location.reload();
     }
@@ -244,30 +297,66 @@ export function ExpenseDashboardClient({
               />
             </div>
 
+            {/* 主類別選擇 */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                類別
+                主類別
               </label>
-              <select
-                name="category_id"
-                defaultValue={editingRecord?.category_id || ""}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-              >
-                <option value="">未分類</option>
-                {organizedCategories.map((mainCat) => (
-                  <optgroup key={mainCat.id} label={`${mainCat.icon} ${mainCat.name}`}>
-                    <option value={mainCat.id}>
-                      {mainCat.icon} {mainCat.name}
+              <div className="mt-1 flex gap-2">
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => {
+                    setSelectedMainCategory(e.target.value);
+                    setSelectedSubCategory(""); // 重置次類別選擇
+                  }}
+                  className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                >
+                  <option value="">未分類</option>
+                  {mainCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
                     </option>
-                    {mainCat.subCategories.map((subCat) => (
-                      <option key={subCat.id} value={subCat.id}>
-                        &nbsp;&nbsp;{subCat.icon} {subCat.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                  ))}
+                </select>
+                {/* 隱藏欄位：用於表單提交 */}
+                <input
+                  type="hidden"
+                  name="category_id"
+                  value={selectedSubCategory || selectedMainCategory || ""}
+                />
+              </div>
             </div>
+
+            {/* 次類別選擇（僅在選擇主類別後顯示） */}
+            {selectedMainCategory && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    次類別（選填）
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsQuickAddSubCategoryOpen(true)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                  >
+                    + 快速新增
+                  </button>
+                </div>
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                >
+                  <option value="">不使用次類別</option>
+                  {currentSubCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
+                      {cat.default_amount && ` (預設: $${cat.default_amount})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -312,7 +401,11 @@ export function ExpenseDashboardClient({
             {editingRecord && (
               <button
                 type="button"
-                onClick={() => setEditingRecord(null)}
+                onClick={() => {
+                  setEditingRecord(null);
+                  setSelectedMainCategory("");
+                  setSelectedSubCategory("");
+                }}
                 className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 取消編輯
@@ -444,6 +537,119 @@ export function ExpenseDashboardClient({
           </div>
         )}
       </div>
+
+      {/* 快速新增次類別 Modal */}
+      {isQuickAddSubCategoryOpen && selectedMainCategory && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setIsQuickAddSubCategoryOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">快速新增次類別</h2>
+              <button
+                type="button"
+                onClick={() => setIsQuickAddSubCategoryOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              action={async (formData: FormData) => {
+                formData.append("parent_category_id", selectedMainCategory);
+                const result = await categoryFormAction(categoryState, formData);
+                if (result.success) {
+                  setIsQuickAddSubCategoryOpen(false);
+                  setQuickAddSubCategoryName("");
+                  setQuickAddSubCategoryIcon("");
+                  setQuickAddSubCategoryAmount("");
+                  window.location.reload();
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  次類別名稱 *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  maxLength={20}
+                  value={quickAddSubCategoryName}
+                  onChange={(e) => setQuickAddSubCategoryName(e.target.value)}
+                  placeholder="例如：早餐、午餐"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    圖示 (emoji)
+                  </label>
+                  <input
+                    type="text"
+                    name="icon"
+                    maxLength={2}
+                    value={quickAddSubCategoryIcon}
+                    onChange={(e) => setQuickAddSubCategoryIcon(e.target.value)}
+                    placeholder="🍽️"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    預設金額（選填）
+                  </label>
+                  <input
+                    type="number"
+                    name="default_amount"
+                    min="0.01"
+                    step="0.01"
+                    value={quickAddSubCategoryAmount}
+                    onChange={(e) => setQuickAddSubCategoryAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  />
+                </div>
+              </div>
+
+              {categoryState.error && (
+                <p className="text-sm text-red-600 dark:text-red-400">{categoryState.error}</p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                >
+                  新增
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickAddSubCategoryOpen(false);
+                    setQuickAddSubCategoryName("");
+                    setQuickAddSubCategoryIcon("");
+                    setQuickAddSubCategoryAmount("");
+                  }}
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+                >
+                  取消
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 類別管理 Modal */}
       {isCategoryModalOpen && (
@@ -608,6 +814,24 @@ function CategoryManagementModal({
               className="h-10 rounded-md border border-slate-300 dark:border-slate-600"
             />
           </div>
+
+          {/* 預設金額（僅次類別顯示） */}
+          {isSubCategory && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                預設金額（選填）
+              </label>
+              <input
+                type="number"
+                name="default_amount"
+                min="0.01"
+                step="0.01"
+                defaultValue={editingCategory?.default_amount || ""}
+                placeholder="選擇此次類別時自動填入的金額"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              />
+            </div>
+          )}
           {categoryState.error && (
             <p className="text-sm text-red-600 dark:text-red-400">{categoryState.error}</p>
           )}

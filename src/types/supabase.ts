@@ -35,6 +35,7 @@ export type ExpenseCategoryRow = {
   color: string | null;
   is_default: boolean;
   parent_category_id: string | null; // 父類別 ID（null 表示主類別）
+  default_amount: number | null; // 預設金額（次類別專用）
   created_at: string;
   updated_at: string;
 };
@@ -91,6 +92,7 @@ export interface Database {
           color?: string | null;
           is_default?: boolean;
           parent_category_id?: string | null;
+          default_amount?: number | null;
           created_at?: string;
           updated_at?: string;
         };

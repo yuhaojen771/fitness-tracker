@@ -33,21 +33,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    setMounted(true);
-
-    // 從 localStorage 讀取用戶選擇
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-
-    if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    } else {
-      // 如果沒有保存的選擇，使用系統偏好
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initialTheme = prefersDark ? "dark" : "light";
-      setTheme(initialTheme);
+    // 立即應用主題，避免閃爍
+    // 從 localStorage 讀取用戶選擇（同步讀取，避免閃爍）
+    let initialTheme: Theme = "light";
+    
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme") as Theme | null;
+      
+      if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
+        initialTheme = savedTheme;
+      } else {
+        // 如果沒有保存的選擇，使用系統偏好
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        initialTheme = prefersDark ? "dark" : "light";
+      }
+      
+      // 立即應用主題
       applyTheme(initialTheme);
+      setTheme(initialTheme);
     }
+    
+    setMounted(true);
   }, []);
 
   // 切換主題

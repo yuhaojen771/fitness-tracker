@@ -148,6 +148,8 @@ export async function saveExpenseCategoryAction(
   const icon = String(formData.get("icon") ?? "").trim() || null;
   const color = String(formData.get("color") ?? "").trim() || null;
   const parentCategoryId = String(formData.get("parent_category_id") ?? "").trim() || null;
+  const defaultAmountStr = String(formData.get("default_amount") ?? "").trim() || null;
+  const defaultAmount = defaultAmountStr ? parseFloat(defaultAmountStr) : null;
 
   if (!name) {
     return { success: false, error: "請輸入類別名稱" };
@@ -167,7 +169,8 @@ export async function saveExpenseCategoryAction(
         name,
         icon,
         color,
-        parent_category_id: parentCategoryId
+        parent_category_id: parentCategoryId,
+        default_amount: defaultAmount
       })
       .eq("id", id)
       .eq("user_id", user.id);
@@ -187,6 +190,7 @@ export async function saveExpenseCategoryAction(
       icon,
       color,
       parent_category_id: finalParentCategoryId,
+      default_amount: defaultAmount,
       is_default: false
     });
 
