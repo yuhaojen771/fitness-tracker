@@ -53,6 +53,8 @@ export function ExpenseDashboardClient({
   const [quickAddSubCategoryName, setQuickAddSubCategoryName] = useState("");
   const [quickAddSubCategoryIcon, setQuickAddSubCategoryIcon] = useState("");
   const [quickAddSubCategoryAmount, setQuickAddSubCategoryAmount] = useState("");
+  const [quickAddError, setQuickAddError] = useState<string | null>(null);
+  const [isQuickAddSubmitting, setIsQuickAddSubmitting] = useState(false);
 
   // 組織類別結構（主類別和次類別）
   const organizedCategories = useMemo(() => {
@@ -561,16 +563,34 @@ export function ExpenseDashboardClient({
             </div>
 
             <form
-              action={async (formData: FormData) => {
-                formData.append("parent_category_id", selectedMainCategory);
-                // 直接調用 action，不使用 useFormState 的 formAction
-                const result: ActionState = await saveExpenseCategoryAction(categoryState, formData);
-                if (result.success) {
-                  setIsQuickAddSubCategoryOpen(false);
-                  setQuickAddSubCategoryName("");
-                  setQuickAddSubCategoryIcon("");
-                  setQuickAddSubCategoryAmount("");
-                  window.location.reload();
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setQuickAddError(null);
+                setIsQuickAddSubmitting(true);
+
+                try {
+                  const formData = new FormData(e.currentTarget);
+                  formData.append("parent_category_id", selectedMainCategory);
+                  
+                  // 直接調用 action
+                  const result: ActionState = await saveExpenseCategoryAction(categoryState, formData);
+                  
+                  if (result.success) {
+                    setIsQuickAddSubCategoryOpen(false);
+                    setQuickAddSubCategoryName("");
+                    setQuickAddSubCategoryIcon("");
+                    setQuickAddSubCategoryAmount("");
+                    setQuickAddError(null);
+                    // 重新載入頁面以更新資料
+                    window.location.reload();
+                  } else {
+                    setQuickAddError(result.error || "新增失敗，請稍後再試");
+                    setIsQuickAddSubmitting(false);
+                  }
+                } catch (error) {
+                  console.error("Quick add subcategory error:", error);
+                  setQuickAddError("發生錯誤，請稍後再試");
+                  setIsQuickAddSubmitting(false);
                 }
               }}
               className="space-y-4"
@@ -624,16 +644,19 @@ export function ExpenseDashboardClient({
                 </div>
               </div>
 
-              {categoryState.error && (
-                <p className="text-sm text-red-600 dark:text-red-400">{categoryState.error}</p>
+              {quickAddError && (
+                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                  {quickAddError}
+                </p>
               )}
 
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                  disabled={isQuickAddSubmitting}
+                  className="flex-1 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  新增
+                  {isQuickAddSubmitting ? "新增中..." : "新增"}
                 </button>
                 <button
                   type="button"
@@ -642,8 +665,11 @@ export function ExpenseDashboardClient({
                     setQuickAddSubCategoryName("");
                     setQuickAddSubCategoryIcon("");
                     setQuickAddSubCategoryAmount("");
+                    setQuickAddError(null);
+                    setIsQuickAddSubmitting(false);
                   }}
-                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
+                  disabled={isQuickAddSubmitting}
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   取消
                 </button>
