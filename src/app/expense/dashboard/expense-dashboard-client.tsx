@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { EmojiPicker } from "@/components/emoji-picker";
 import {
   saveExpenseRecordAction,
   deleteExpenseRecordAction,
@@ -45,6 +46,17 @@ export function ExpenseDashboardClient({
   const [selectedMonth, setSelectedMonth] = useState<string>(
     new Date().toISOString().slice(0, 7) // YYYY-MM
   );
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
+    return {
+      start: startDate.toISOString().slice(0, 10),
+      end: endDate.toISOString().slice(0, 10)
+    };
+  });
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
   const [categories, setCategories] = useState(initialCategories);
   // 從 sessionStorage 恢復主類別選擇
@@ -194,7 +206,7 @@ export function ExpenseDashboardClient({
       categoryStats: categoryStatsArray,
       records: finalRecords
     };
-  }, [records, selectedMonth, categories, selectedCategoryFilter]);
+  }, [records, dateRange, categories, selectedCategoryFilter]);
 
   // 當表單成功提交後重置
   useEffect(() => {
@@ -260,21 +272,115 @@ export function ExpenseDashboardClient({
         </div>
       </div>
 
-      {/* 月份選擇 */}
-      <div className="flex items-center justify-between">
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-        />
-        <button
-          type="button"
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-        >
-          管理類別
-        </button>
+      {/* 日期區間選擇 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">日期區間：</label>
+          <input
+            type="date"
+            value={dateRange.start}
+            onChange={(e) => {
+              if (e.target.value) {
+                setDateRange((prev) => ({ ...prev, start: e.target.value }));
+                // 同步更新 selectedMonth（用於顯示）
+                const date = new Date(e.target.value);
+                setSelectedMonth(date.toISOString().slice(0, 7));
+              }
+            }}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+          />
+          <span className="text-sm text-slate-500 dark:text-slate-400">至</span>
+          <input
+            type="date"
+            value={dateRange.end}
+            onChange={(e) => {
+              if (e.target.value) {
+                setDateRange((prev) => ({ ...prev, end: e.target.value }));
+              }
+            }}
+            min={dateRange.start}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth();
+              const startDate = new Date(year, month, 1);
+              const endDate = new Date(year, month + 1, 0);
+              setDateRange({
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+              });
+              setSelectedMonth(today.toISOString().slice(0, 7));
+            }}
+            className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            當月
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            管理類別
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // 匯出報表功能
+              const startDate = new Date(dateRange.start);
+              const endDate = new Date(dateRange.end);
+              endDate.setHours(23, 59, 59, 999);
+              
+              const filteredRecords = records.filter((record) => {
+                const recordDate = new Date(record.date);
+                return recordDate >= startDate && recordDate <= endDate;
+              });
+              
+              // 匯出為 CSV
+              const headers = ["日期", "類型", "金額", "類別", "備註"];
+              const rows = filteredRecords.map((record) => {
+                const category = categories.find((c) => c.id === record.category_id);
+                const parentCategory = category?.parent_category_id
+                  ? categories.find((c) => c.id === category.parent_category_id)
+                  : null;
+                const categoryName = parentCategory
+                  ? `${parentCategory.name} / ${category.name}`
+                  : category?.name || "未分類";
+                
+                return [
+                  new Date(record.date).toLocaleDateString("zh-TW"),
+                  record.type === "expense" ? "支出" : "收入",
+                  record.amount.toString(),
+                  categoryName,
+                  record.note || ""
+                ];
+              });
+              
+              const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\r\n");
+              const BOM = "\uFEFF";
+              const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              const fileName = dateRange.start === dateRange.end 
+                ? `記帳報表_${dateRange.start}.csv`
+                : `記帳報表_${dateRange.start}_${dateRange.end}.csv`;
+              link.download = fileName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            }}
+            className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+          >
+            匯出報表
+          </button>
+        </div>
       </div>
 
       {/* 記帳表單 */}
@@ -634,13 +740,14 @@ export function ExpenseDashboardClient({
                     圖示 (emoji)
                   </label>
                   <input
-                    type="text"
+                    type="hidden"
                     name="icon"
-                    maxLength={2}
                     value={quickAddSubCategoryIcon}
-                    onChange={(e) => setQuickAddSubCategoryIcon(e.target.value)}
-                    placeholder="🍽️"
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  />
+                  <EmojiPicker
+                    value={quickAddSubCategoryIcon}
+                    onChange={setQuickAddSubCategoryIcon}
+                    placeholder="選擇 emoji"
                   />
                 </div>
 
@@ -734,6 +841,8 @@ function CategoryManagementModal({
   const [editingCategory, setEditingCategory] = useState<ExpenseCategoryRow | null>(null);
   const [isSubCategory, setIsSubCategory] = useState(false);
   const [selectedParentCategory, setSelectedParentCategory] = useState<string>("");
+  const [categoryIcon, setCategoryIcon] = useState<string>("");
+  const [categoryColor, setCategoryColor] = useState<string>("#6b7280");
 
   // 組織類別結構
   const mainCategories = categories.filter((c) => !c.parent_category_id);
@@ -769,7 +878,19 @@ function CategoryManagementModal({
         </div>
 
         {/* 新增類別表單 */}
-        <form action={formAction} className="mb-6 space-y-3 border-b border-slate-200 pb-4 dark:border-slate-700">
+        <form 
+          action={async (formData: FormData) => {
+            // 確保 icon 和 color 被正確提交
+            if (categoryIcon) {
+              formData.set("icon", categoryIcon);
+            }
+            if (categoryColor) {
+              formData.set("color", categoryColor);
+            }
+            await formAction(formData);
+          }}
+          className="mb-6 space-y-3 border-b border-slate-200 pb-4 dark:border-slate-700"
+        >
           {editingCategory && <input type="hidden" name="id" value={editingCategory.id} />}
           
           {/* 類別類型選擇 */}
@@ -791,7 +912,11 @@ function CategoryManagementModal({
               </button>
               <button
                 type="button"
-                onClick={() => setIsSubCategory(true)}
+                onClick={() => {
+                  setIsSubCategory(true);
+                  setCategoryIcon("");
+                  setCategoryColor("#6b7280");
+                }}
                 className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isSubCategory
                     ? "bg-emerald-600 text-white"
@@ -844,20 +969,34 @@ function CategoryManagementModal({
               placeholder="類別名稱"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
-            <input
-              type="text"
-              name="icon"
-              maxLength={2}
-              defaultValue={editingCategory?.icon || ""}
-              placeholder="圖示 (emoji)"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-            />
-            <input
-              type="color"
-              name="color"
-              defaultValue={editingCategory?.color || "#6b7280"}
-              className="h-10 rounded-md border border-slate-300 dark:border-slate-600"
-            />
+            <div>
+              <input
+                type="hidden"
+                name="icon"
+                value={categoryIcon}
+              />
+              <EmojiPicker
+                value={categoryIcon}
+                onChange={setCategoryIcon}
+                placeholder="選擇 emoji"
+              />
+            </div>
+            <div>
+              <input
+                type="hidden"
+                name="color"
+                value={categoryColor}
+              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={categoryColor}
+                  onChange={(e) => setCategoryColor(e.target.value)}
+                  className="h-10 w-full rounded-md border border-slate-300 dark:border-slate-600"
+                />
+                <span className="text-xs text-slate-500 dark:text-slate-400">{categoryColor}</span>
+              </div>
+            </div>
           </div>
 
           {/* 預設金額（僅次類別顯示） */}
@@ -894,6 +1033,8 @@ function CategoryManagementModal({
                   setEditingCategory(null);
                   setIsSubCategory(false);
                   setSelectedParentCategory("");
+                  setCategoryIcon("");
+                  setCategoryColor("#6b7280");
                 }}
                 className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
               >
@@ -940,6 +1081,8 @@ function CategoryManagementModal({
                                     setEditingCategory(sub);
                                     setIsSubCategory(true);
                                     setSelectedParentCategory(sub.parent_category_id || "");
+                                    setCategoryIcon(sub.icon || "");
+                                    setCategoryColor(sub.color || "#6b7280");
                                   }}
                                   className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                                 >
@@ -986,6 +1129,8 @@ function CategoryManagementModal({
                               setEditingCategory(cat);
                               setIsSubCategory(false);
                               setSelectedParentCategory("");
+                              setCategoryIcon(cat.icon || "");
+                              setCategoryColor(cat.color || "#6b7280");
                             }}
                             className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                           >
@@ -1018,6 +1163,8 @@ function CategoryManagementModal({
                                     setEditingCategory(sub);
                                     setIsSubCategory(true);
                                     setSelectedParentCategory(sub.parent_category_id || "");
+                                    setCategoryIcon(sub.icon || "");
+                                    setCategoryColor(sub.color || "#6b7280");
                                   }}
                                   className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                                 >

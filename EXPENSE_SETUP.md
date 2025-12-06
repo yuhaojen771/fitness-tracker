@@ -9,16 +9,19 @@
 在 Supabase Dashboard 中執行以下 SQL：
 
 1. 前往 Supabase Dashboard → SQL Editor
-2. 先執行 `supabase/schema_expense.sql`（建立基本資料表）
-3. 再執行 `supabase/schema_expense_subcategories.sql`（添加次類別支援）
+2. 按照以下順序執行 migration 文件：
 
 **執行順序：**
 ```sql
--- 1. 先執行 schema_expense.sql
+-- 1. 先執行 schema_expense.sql（建立基本資料表）
 -- 2. 再執行 schema_expense_subcategories.sql（添加 parent_category_id 欄位）
+-- 3. 最後執行 schema_expense_default_amount.sql（添加 default_amount 欄位）
 ```
 
-**注意：** 如果已經執行過 `schema_expense.sql`，只需要執行 `schema_expense_subcategories.sql` 即可。
+**重要：** 
+- 如果已經執行過 `schema_expense.sql`，只需要執行後續的 migration 文件
+- 如果已經執行過 `schema_expense_subcategories.sql`，只需要執行 `schema_expense_default_amount.sql` 即可
+- 每個 migration 文件只需要執行一次
 
 ### 步驟 2：驗證資料表
 
