@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { ExpenseRecordRow, ExpenseCategoryRow } from "@/types/supabase";
 
-type ActionState = {
+export type ActionState = {
   success: boolean;
   error?: string;
 };

@@ -8,6 +8,7 @@ import {
   saveExpenseCategoryAction,
   deleteExpenseCategoryAction
 } from "./actions";
+import type { ActionState } from "./actions";
 import type { ExpenseRecordRow, ExpenseCategoryRow } from "@/types/supabase";
 
 type ExpenseDashboardClientProps = {
@@ -562,7 +563,8 @@ export function ExpenseDashboardClient({
             <form
               action={async (formData: FormData) => {
                 formData.append("parent_category_id", selectedMainCategory);
-                const result = await categoryFormAction(formData);
+                // 直接調用 action，不使用 useFormState 的 formAction
+                const result: ActionState = await saveExpenseCategoryAction(categoryState, formData);
                 if (result.success) {
                   setIsQuickAddSubCategoryOpen(false);
                   setQuickAddSubCategoryName("");
