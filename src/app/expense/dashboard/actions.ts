@@ -213,8 +213,8 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
   }
 
   // 檢查是否為預設類別
-  const { data: category } = await supabase
-    .from("expense_categories")
+  const expenseCategoriesTable = supabase.from("expense_categories") as any;
+  const { data: category } = await expenseCategoriesTable
     .select("is_default")
     .eq("id", categoryId)
     .eq("user_id", user.id)
@@ -225,8 +225,8 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
   }
 
   // 檢查是否有記錄使用此類別
-  const { data: records } = await supabase
-    .from("expense_records")
+  const expenseRecordsTable = supabase.from("expense_records") as any;
+  const { data: records } = await expenseRecordsTable
     .select("id")
     .eq("category_id", categoryId)
     .eq("user_id", user.id)
