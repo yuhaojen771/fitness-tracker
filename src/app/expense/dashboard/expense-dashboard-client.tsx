@@ -46,6 +46,14 @@ export function ExpenseDashboardClient({
   const [selectedMonth, setSelectedMonth] = useState<string>(
     new Date().toISOString().slice(0, 7) // YYYY-MM
   );
+  // 格式化日期為 YYYY-MM-DD（使用本地時間）
+  const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
     const today = new Date();
     const year = today.getFullYear();
@@ -53,8 +61,8 @@ export function ExpenseDashboardClient({
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0);
     return {
-      start: startDate.toISOString().slice(0, 10),
-      end: endDate.toISOString().slice(0, 10)
+      start: formatDateLocal(startDate),
+      end: formatDateLocal(endDate)
     };
   });
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
@@ -312,10 +320,10 @@ export function ExpenseDashboardClient({
               const startDate = new Date(year, month, 1);
               const endDate = new Date(year, month + 1, 0);
               setDateRange({
-                start: startDate.toISOString().slice(0, 10),
-                end: endDate.toISOString().slice(0, 10)
+                start: formatDateLocal(startDate),
+                end: formatDateLocal(endDate)
               });
-              setSelectedMonth(today.toISOString().slice(0, 7));
+              setSelectedMonth(`${year}-${String(month + 1).padStart(2, "0")}`);
             }}
             className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
           >
