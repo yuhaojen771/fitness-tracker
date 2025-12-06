@@ -47,8 +47,25 @@ export function ExpenseDashboardClient({
   );
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
   const [categories, setCategories] = useState(initialCategories);
-  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
+  // 從 sessionStorage 恢復主類別選擇
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("expense_selected_main_category") || "";
+    }
+    return "";
+  });
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+
+  // 當主類別選擇改變時，保存到 sessionStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (selectedMainCategory) {
+        sessionStorage.setItem("expense_selected_main_category", selectedMainCategory);
+      } else {
+        sessionStorage.removeItem("expense_selected_main_category");
+      }
+    }
+  }, [selectedMainCategory]);
   const [isQuickAddSubCategoryOpen, setIsQuickAddSubCategoryOpen] = useState(false);
   const [quickAddSubCategoryName, setQuickAddSubCategoryName] = useState("");
   const [quickAddSubCategoryIcon, setQuickAddSubCategoryIcon] = useState("");
@@ -183,7 +200,7 @@ export function ExpenseDashboardClient({
   useEffect(() => {
     if (state.success) {
       setEditingRecord(null);
-      setSelectedMainCategory("");
+      // 保留主類別選擇，只重置次類別選擇
       setSelectedSubCategory("");
       // 重新載入頁面以更新資料
       window.location.reload();
@@ -406,7 +423,7 @@ export function ExpenseDashboardClient({
                 type="button"
                 onClick={() => {
                   setEditingRecord(null);
-                  setSelectedMainCategory("");
+                  // 取消編輯時保留主類別選擇，只重置次類別
                   setSelectedSubCategory("");
                 }}
                 className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
