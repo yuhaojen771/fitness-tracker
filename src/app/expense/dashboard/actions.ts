@@ -236,7 +236,6 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
     return { success: false, error: "此類別仍有記帳記錄，無法刪除" };
   }
 
-  const expenseCategoriesTable = supabase.from("expense_categories") as any;
   const { error } = await expenseCategoriesTable
     .delete()
     .eq("id", categoryId)
