@@ -418,7 +418,7 @@ function CategoryManagementModal({
 }: {
   categories: ExpenseCategoryRow[];
   onClose: () => void;
-  formAction: (prevState: any, formData: FormData) => Promise<any>;
+  formAction: any; // useFormState 返回的 formAction 類型
   categoryState: { success: boolean; error?: string };
   onDelete: (id: string) => Promise<void>;
 }) {
