@@ -55,7 +55,7 @@
 
 在 Supabase Dashboard 的 **Authentication** → **URL Configuration** 中，確認：
 
-- **Site URL**: `http://localhost:3000` (開發環境) 或你的生產環境 URL
+- **Site URL**: `image.pnghttp://localhost:3000` (開發環境) 或你的生產環境 URL
 - **Redirect URLs**: 加入以下 URL
   ```
   http://localhost:3000/auth/callback

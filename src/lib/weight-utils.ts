@@ -41,3 +41,5 @@ export function getWeightRange(unit: WeightUnit): { min: number; max: number } {
   return { min: 20, max: 500 };
 }
 
+
+

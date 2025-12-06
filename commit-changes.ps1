@@ -27,3 +27,5 @@ Write-Host "Vercel 將自動部署新版本。" -ForegroundColor Green
 
 # 暫停以便查看輸出
 Read-Host "`n按 Enter 鍵退出"
+
+

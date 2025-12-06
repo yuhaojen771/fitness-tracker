@@ -17,10 +17,12 @@ export async function GET(request: Request) {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
 
-  // 記錄環境變數狀態（用於調試）
-  console.log("[OAuth Callback] Request URL:", requestUrl.href);
-  console.log("[OAuth Callback] Base URL:", baseUrl);
-  console.log("[OAuth Callback] NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL || "未設置");
+  // 記錄環境變數狀態（僅在開發環境用於調試）
+  if (process.env.NODE_ENV === "development") {
+    console.log("[OAuth Callback] Request URL:", requestUrl.href);
+    console.log("[OAuth Callback] Base URL:", baseUrl);
+    console.log("[OAuth Callback] NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL || "未設置");
+  }
 
   // 檢查是否有 OAuth 錯誤參數
   if (errorParam) {

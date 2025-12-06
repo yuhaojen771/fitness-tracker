@@ -217,3 +217,5 @@ SENDGRID_API_KEY=your_sendgrid_key
 4. 實作自動續訂功能
 5. 添加訂閱歷史記錄
 
+
+

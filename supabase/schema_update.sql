@@ -5,3 +5,5 @@ add column if not exists target_date date,
 add column if not exists starting_weight numeric,
 add column if not exists starting_date date;
 
+
+

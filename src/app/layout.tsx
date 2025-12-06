@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 import { FeedbackButton } from "@/components/feedback-button";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fitness-tracker.example"), // 部署時可改成正式網域
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fitness-tracker.example"), // 使用環境變數，部署時在 Vercel 中設定 NEXT_PUBLIC_SITE_URL
   title: {
     default: "Fitness Tracker 個人健康數據追蹤器",
     template: "%s | Fitness Tracker"

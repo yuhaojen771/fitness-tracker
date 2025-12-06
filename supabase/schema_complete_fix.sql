@@ -22,3 +22,5 @@ create policy "allow users to insert own profile"
   for insert
   with check (auth.uid() = id);
 
+
+

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "./theme-toggle";
 import { FontSizeToggle } from "./font-size-toggle";
@@ -18,6 +18,11 @@ export function Navigation() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // 判斷當前在哪個工具
+  const isExpensePage = pathname?.startsWith("/expense");
+  const isHealthPage = pathname?.startsWith("/dashboard") || pathname === "/";
 
   useEffect(() => {
     // 檢查登入狀態
@@ -82,12 +87,29 @@ export function Navigation() {
         {/* 桌面版導覽 */}
         <div className="hidden items-center gap-4 md:flex">
           <div className="space-x-4 text-sm font-medium">
-            <Link
-              href="/dashboard"
-              className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-            >
-              健康記錄
-            </Link>
+            {/* 工具切換 */}
+            <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+              <Link
+                href="/dashboard"
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isHealthPage
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                }`}
+              >
+                健康記錄
+              </Link>
+              <Link
+                href="/expense/dashboard"
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isExpensePage
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                }`}
+              >
+                記帳
+              </Link>
+            </div>
             <Link
               href="/bmi-calculator"
               className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
@@ -182,13 +204,31 @@ export function Navigation() {
       {/* 行動版選單 */}
       {isMobileMenuOpen && (
         <div className="mt-4 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700 md:hidden">
-          <Link
-            href="/dashboard"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            健康記錄
-          </Link>
+          {/* 工具切換 */}
+          <div className="flex gap-2 rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+            <Link
+              href="/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors ${
+                isHealthPage
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              }`}
+            >
+              健康記錄
+            </Link>
+            <Link
+              href="/expense/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors ${
+                isExpensePage
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              }`}
+            >
+              記帳
+            </Link>
+          </div>
           <Link
             href="/bmi-calculator"
             onClick={() => setIsMobileMenuOpen(false)}

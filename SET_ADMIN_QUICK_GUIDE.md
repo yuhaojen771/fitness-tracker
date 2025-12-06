@@ -148,3 +148,5 @@ WHERE u.email = 'admin@example.com';
 
 如果一切正常，你會看到 `is_admin = true`，然後就可以使用該帳號登入並訪問 `/admin` 管理後台了！
 
+
+

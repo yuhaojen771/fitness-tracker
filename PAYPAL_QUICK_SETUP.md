@@ -123,3 +123,5 @@ NEXT_PUBLIC_PAYPAL_TEST_URL=https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_s
 2. 聯繫 PayPal 客戶服務
 3. 或暫時使用模擬付款功能進行開發測試
 
+
+
