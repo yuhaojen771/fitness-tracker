@@ -348,7 +348,7 @@ export function ExpenseDashboardClient({
                 const parentCategory = category?.parent_category_id
                   ? categories.find((c) => c.id === category.parent_category_id)
                   : null;
-                const categoryName = parentCategory
+                const categoryName = parentCategory && category
                   ? `${parentCategory.name} / ${category.name}`
                   : category?.name || "未分類";
                 
