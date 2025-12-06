@@ -562,7 +562,7 @@ export function ExpenseDashboardClient({
             <form
               action={async (formData: FormData) => {
                 formData.append("parent_category_id", selectedMainCategory);
-                const result = await categoryFormAction(categoryState, formData);
+                const result = await categoryFormAction(formData);
                 if (result.success) {
                   setIsQuickAddSubCategoryOpen(false);
                   setQuickAddSubCategoryName("");
