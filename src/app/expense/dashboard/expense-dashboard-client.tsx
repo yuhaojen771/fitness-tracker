@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { EmojiPicker } from "@/components/emoji-picker";
@@ -69,6 +69,7 @@ export function ExpenseDashboardClient({
   });
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all"); // 主類別篩選
   const [categories, setCategories] = useState(initialCategories);
+  const deletedCategoryIdsRef = useRef<Set<string>>(new Set()); // 追蹤已刪除的類別 ID
   // 從 sessionStorage 恢復主類別選擇
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -154,7 +155,14 @@ export function ExpenseDashboardClient({
   // 當 categories 更新時同步（但只在 Modal 關閉時同步，避免刪除後被覆蓋）
   useEffect(() => {
     if (!isCategoryModalOpen) {
-      setCategories(initialCategories);
+      // 如果沒有待刪除的類別，才同步 initialCategories
+      // 過濾掉已刪除的類別，確保不會重新加入
+      const filteredInitial = initialCategories.filter(
+        (c) => !deletedCategoryIdsRef.current.has(c.id)
+      );
+      setCategories(filteredInitial);
+      // 清空已刪除的類別追蹤
+      deletedCategoryIdsRef.current.clear();
     }
   }, [initialCategories, isCategoryModalOpen]);
 
@@ -830,6 +838,18 @@ export function ExpenseDashboardClient({
             }
             const result = await deleteExpenseCategoryAction(id);
             if (result.success) {
+              // 記錄已刪除的類別 ID（包括次類別）
+              const categoryToDelete = categories.find((c) => c.id === id);
+              deletedCategoryIdsRef.current.add(id);
+              if (categoryToDelete && !categoryToDelete.parent_category_id) {
+                // 如果是主類別，也要記錄所有次類別
+                categories.forEach((c) => {
+                  if (c.parent_category_id === id) {
+                    deletedCategoryIdsRef.current.add(c.id);
+                  }
+                });
+              }
+              
               // 更新本地 categories，移除已刪除的類別及其次類別
               setCategories((prev) => {
                 const filtered = prev.filter((c) => {
@@ -841,6 +861,8 @@ export function ExpenseDashboardClient({
                 });
                 return filtered;
               });
+              // 重新獲取資料以更新 initialCategories
+              router.refresh();
             } else {
               alert(result.error || "刪除失敗");
             }
