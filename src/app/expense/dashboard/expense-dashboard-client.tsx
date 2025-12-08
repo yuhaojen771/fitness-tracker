@@ -1061,7 +1061,28 @@ function CategoryManagementModal({
                         <span>
                           {cat.icon} {cat.name}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">預設</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">預設</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCategory(cat);
+                              setIsSubCategory(false);
+                              setSelectedParentCategory("");
+                              setCategoryIcon(cat.icon || "");
+                            }}
+                            className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                          >
+                            編輯
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(cat.id)}
+                            className="text-xs text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            刪除
+                          </button>
+                        </div>
                       </div>
                       {/* 次類別 */}
                       {subs.length > 0 && (

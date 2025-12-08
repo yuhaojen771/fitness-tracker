@@ -237,18 +237,8 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
     return { success: false, error: "請先登入" };
   }
 
-  // 檢查是否為預設類別
   const expenseCategoriesTable = supabase.from("expense_categories") as any;
-  const { data: category } = await expenseCategoriesTable
-    .select("is_default")
-    .eq("id", categoryId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (category?.is_default) {
-    return { success: false, error: "無法刪除預設類別" };
-  }
-
+  
   // 檢查是否有記錄使用此類別（包括主類別和次類別）
   const expenseRecordsTable = supabase.from("expense_records") as any;
   
@@ -281,8 +271,20 @@ export async function deleteExpenseCategoryAction(categoryId: string): Promise<A
     if (subRecords && subRecords.length > 0) {
       return { success: false, error: "此主類別的次類別仍有記帳記錄，無法刪除" };
     }
+    
+    // 如果沒有記錄使用次類別，先刪除所有次類別
+    const { error: deleteSubError } = await expenseCategoriesTable
+      .delete()
+      .in("id", subCategoryIds)
+      .eq("user_id", user.id);
+    
+    if (deleteSubError) {
+      console.error("Delete subcategories error:", deleteSubError);
+      return { success: false, error: "刪除次類別失敗，請稍後再試" };
+    }
   }
 
+  // 刪除主類別
   const { error } = await expenseCategoriesTable
     .delete()
     .eq("id", categoryId)
