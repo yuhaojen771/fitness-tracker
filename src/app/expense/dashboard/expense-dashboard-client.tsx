@@ -151,10 +151,12 @@ export function ExpenseDashboardClient({
     }
   }, [editingRecord, categories]);
 
-  // 當 categories 更新時同步
+  // 當 categories 更新時同步（但只在 Modal 關閉時同步，避免刪除後被覆蓋）
   useEffect(() => {
-    setCategories(initialCategories);
-  }, [initialCategories]);
+    if (!isCategoryModalOpen) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories, isCategoryModalOpen]);
 
   // 計算月度統計
   const monthlyStats = useMemo(() => {
