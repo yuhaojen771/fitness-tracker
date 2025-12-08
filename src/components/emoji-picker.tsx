@@ -37,12 +37,12 @@ export function EmojiPicker({ value, onChange, placeholder = "選擇 emoji" }: E
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           maxLength={2}
-          className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+          className="flex-1 min-w-0 rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
         />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 flex-shrink-0"
         >
           😀
         </button>

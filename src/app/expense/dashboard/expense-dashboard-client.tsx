@@ -977,7 +977,7 @@ function CategoryManagementModal({
               placeholder="類別名稱"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
-            <div>
+            <div className="min-w-0">
               <input
                 type="hidden"
                 name="icon"
@@ -989,7 +989,7 @@ function CategoryManagementModal({
                 placeholder="選擇 emoji"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <input
                 type="hidden"
                 name="color"
@@ -1000,9 +1000,9 @@ function CategoryManagementModal({
                   type="color"
                   value={categoryColor}
                   onChange={(e) => setCategoryColor(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-300 dark:border-slate-600"
+                  className="h-10 flex-shrink-0 w-16 rounded-md border border-slate-300 dark:border-slate-600 cursor-pointer"
                 />
-                <span className="text-xs text-slate-500 dark:text-slate-400">{categoryColor}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap min-w-0 truncate">{categoryColor}</span>
               </div>
             </div>
           </div>
