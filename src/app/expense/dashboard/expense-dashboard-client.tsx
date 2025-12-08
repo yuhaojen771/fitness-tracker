@@ -865,21 +865,37 @@ function CategoryManagementModal({
     subs: subCategories.filter((sub) => sub.parent_category_id === main.id)
   }));
 
+  // 當編輯類別時，同步更新表單狀態
+  useEffect(() => {
+    if (editingCategory) {
+      setCategoryIcon(editingCategory.icon || "");
+      setCategoryColor(editingCategory.color || "#6b7280");
+      setIsSubCategory(!!editingCategory.parent_category_id);
+      setSelectedParentCategory(editingCategory.parent_category_id || "");
+    } else {
+      // 重置表單狀態
+      setCategoryIcon("");
+      setCategoryColor("#6b7280");
+      setIsSubCategory(false);
+      setSelectedParentCategory("");
+    }
+  }, [editingCategory]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800"
+        className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">管理類別</h2>
+        <div className="mb-4 flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-semibold truncate pr-2">管理類別</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 flex-shrink-0"
           >
             ✕
           </button>
@@ -983,6 +999,7 @@ function CategoryManagementModal({
                 name="icon"
                 value={categoryIcon}
               />
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">選擇</label>
               <EmojiPicker
                 value={categoryIcon}
                 onChange={setCategoryIcon}
@@ -995,6 +1012,7 @@ function CategoryManagementModal({
                 name="color"
                 value={categoryColor}
               />
+              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">選擇</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
