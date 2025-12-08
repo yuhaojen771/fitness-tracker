@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { EmojiPicker } from "@/components/emoji-picker";
 import {
   saveExpenseRecordAction,
@@ -39,6 +40,7 @@ export function ExpenseDashboardClient({
   records,
   categories: initialCategories
 }: ExpenseDashboardClientProps) {
+  const router = useRouter();
   const [state, formAction] = useFormState(saveExpenseRecordAction, initialState);
   const [categoryState, categoryFormAction] = useFormState(saveExpenseCategoryAction, initialState);
   const [editingRecord, setEditingRecord] = useState<ExpenseRecordRow | null>(null);
@@ -229,10 +231,10 @@ export function ExpenseDashboardClient({
 
   useEffect(() => {
     if (categoryState.success) {
-      setIsCategoryModalOpen(false);
-      window.location.reload();
+      // 重新獲取資料，但保持 Modal 開啟
+      router.refresh();
     }
-  }, [categoryState.success]);
+  }, [categoryState.success, router]);
 
   // 處理刪除
   const handleDelete = async (id: string) => {
@@ -819,9 +821,24 @@ export function ExpenseDashboardClient({
           formAction={categoryFormAction}
           categoryState={categoryState}
           onDelete={async (id) => {
+            const category = categories.find((c) => c.id === id);
+            const categoryName = category?.name || "此類別";
+            if (!confirm(`確定要刪除「${categoryName}」嗎？`)) {
+              return;
+            }
             const result = await deleteExpenseCategoryAction(id);
             if (result.success) {
-              window.location.reload();
+              // 更新本地 categories，移除已刪除的類別及其次類別
+              setCategories((prev) => {
+                const filtered = prev.filter((c) => {
+                  // 移除被刪除的類別
+                  if (c.id === id) return false;
+                  // 如果是主類別被刪除，也要移除其所有次類別
+                  if (c.parent_category_id === id) return false;
+                  return true;
+                });
+                return filtered;
+              });
             } else {
               alert(result.error || "刪除失敗");
             }
@@ -877,6 +894,16 @@ function CategoryManagementModal({
       setSelectedParentCategory("");
     }
   }, [editingCategory]);
+
+  // 當新增/編輯成功時，重置表單狀態
+  useEffect(() => {
+    if (categoryState.success) {
+      setEditingCategory(null);
+      setCategoryIcon("");
+      setIsSubCategory(false);
+      setSelectedParentCategory("");
+    }
+  }, [categoryState.success]);
 
   return (
     <div
