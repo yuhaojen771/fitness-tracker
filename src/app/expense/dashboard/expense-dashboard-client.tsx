@@ -850,7 +850,6 @@ function CategoryManagementModal({
   const [isSubCategory, setIsSubCategory] = useState(false);
   const [selectedParentCategory, setSelectedParentCategory] = useState<string>("");
   const [categoryIcon, setCategoryIcon] = useState<string>("");
-  const [categoryColor, setCategoryColor] = useState<string>("#6b7280");
 
   // 組織類別結構
   const mainCategories = categories.filter((c) => !c.parent_category_id);
@@ -869,13 +868,11 @@ function CategoryManagementModal({
   useEffect(() => {
     if (editingCategory) {
       setCategoryIcon(editingCategory.icon || "");
-      setCategoryColor(editingCategory.color || "#6b7280");
       setIsSubCategory(!!editingCategory.parent_category_id);
       setSelectedParentCategory(editingCategory.parent_category_id || "");
     } else {
       // 重置表單狀態
       setCategoryIcon("");
-      setCategoryColor("#6b7280");
       setIsSubCategory(false);
       setSelectedParentCategory("");
     }
@@ -904,12 +901,9 @@ function CategoryManagementModal({
         {/* 新增類別表單 */}
         <form 
           action={async (formData: FormData) => {
-            // 確保 icon 和 color 被正確提交
+            // 確保 icon 被正確提交
             if (categoryIcon) {
               formData.set("icon", categoryIcon);
-            }
-            if (categoryColor) {
-              formData.set("color", categoryColor);
             }
             await formAction(formData);
           }}
@@ -939,7 +933,6 @@ function CategoryManagementModal({
                 onClick={() => {
                   setIsSubCategory(true);
                   setCategoryIcon("");
-                  setCategoryColor("#6b7280");
                 }}
                 className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isSubCategory
@@ -983,7 +976,7 @@ function CategoryManagementModal({
             value={isSubCategory ? (editingCategory?.parent_category_id || selectedParentCategory) : ""}
           />
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <input
               type="text"
               name="name"
@@ -993,35 +986,17 @@ function CategoryManagementModal({
               placeholder="類別名稱"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
             />
-            <div className="min-w-0">
+            <div>
               <input
                 type="hidden"
                 name="icon"
                 value={categoryIcon}
               />
-              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">選擇</label>
               <EmojiPicker
                 value={categoryIcon}
                 onChange={setCategoryIcon}
                 placeholder="選擇 emoji"
               />
-            </div>
-            <div className="min-w-0">
-              <input
-                type="hidden"
-                name="color"
-                value={categoryColor}
-              />
-              <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">選擇</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={categoryColor}
-                  onChange={(e) => setCategoryColor(e.target.value)}
-                  className="h-10 flex-shrink-0 w-16 rounded-md border border-slate-300 dark:border-slate-600 cursor-pointer"
-                />
-                <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap min-w-0 truncate">{categoryColor}</span>
-              </div>
             </div>
           </div>
 
@@ -1060,7 +1035,6 @@ function CategoryManagementModal({
                   setIsSubCategory(false);
                   setSelectedParentCategory("");
                   setCategoryIcon("");
-                  setCategoryColor("#6b7280");
                 }}
                 className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-300"
               >
@@ -1108,7 +1082,6 @@ function CategoryManagementModal({
                                     setIsSubCategory(true);
                                     setSelectedParentCategory(sub.parent_category_id || "");
                                     setCategoryIcon(sub.icon || "");
-                                    setCategoryColor(sub.color || "#6b7280");
                                   }}
                                   className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                                 >
@@ -1156,7 +1129,6 @@ function CategoryManagementModal({
                               setIsSubCategory(false);
                               setSelectedParentCategory("");
                               setCategoryIcon(cat.icon || "");
-                              setCategoryColor(cat.color || "#6b7280");
                             }}
                             className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                           >
@@ -1190,7 +1162,6 @@ function CategoryManagementModal({
                                     setIsSubCategory(true);
                                     setSelectedParentCategory(sub.parent_category_id || "");
                                     setCategoryIcon(sub.icon || "");
-                                    setCategoryColor(sub.color || "#6b7280");
                                   }}
                                   className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                                 >
