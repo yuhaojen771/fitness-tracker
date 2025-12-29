@@ -166,12 +166,16 @@ export function ExpenseDashboardClient({
     }
   }, [initialCategories, isCategoryModalOpen]);
 
-  // 計算月度統計
+  // 計算統計與記錄（依日期區間與主類別篩選）
   const monthlyStats = useMemo(() => {
-    const [year, month] = selectedMonth.split("-").map(Number);
+    // 依目前的日期區間篩選記錄（預設為當月）
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    endDate.setHours(23, 59, 59, 999);
+
     const filteredRecords = records.filter((record) => {
       const recordDate = new Date(record.date);
-      return recordDate.getFullYear() === year && recordDate.getMonth() + 1 === month;
+      return recordDate >= startDate && recordDate <= endDate;
     });
 
     const expenses = filteredRecords.filter((r) => r.type === "expense");
