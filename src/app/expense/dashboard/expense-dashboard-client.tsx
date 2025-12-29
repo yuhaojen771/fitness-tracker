@@ -600,21 +600,53 @@ export function ExpenseDashboardClient({
 
       {/* 記帳列表 */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">記帳記錄</h2>
-          {/* 主類別篩選 */}
-          <select
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
-          >
-            <option value="all">全部類別</option>
-            {organizedCategories.map((mainCat) => (
-              <option key={mainCat.id} value={mainCat.id}>
-                {mainCat.icon} {mainCat.name}
-              </option>
-            ))}
-          </select>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">記帳記錄</h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              ({new Date(dateRange.start).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })} - {new Date(dateRange.end).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })})
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* 日期區間篩選 */}
+            <div className="flex items-center gap-1">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDateRange((prev) => ({ ...prev, start: e.target.value }));
+                  }
+                }}
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+              />
+              <span className="text-xs text-slate-500 dark:text-slate-400">至</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setDateRange((prev) => ({ ...prev, end: e.target.value }));
+                  }
+                }}
+                min={dateRange.start}
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800"
+              />
+            </div>
+            {/* 主類別篩選 */}
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+            >
+              <option value="all">全部類別</option>
+              {organizedCategories.map((mainCat) => (
+                <option key={mainCat.id} value={mainCat.id}>
+                  {mainCat.icon} {mainCat.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         {monthlyStats.records.length === 0 ? (
           <p className="text-center text-slate-500 dark:text-slate-400">尚無記錄</p>
